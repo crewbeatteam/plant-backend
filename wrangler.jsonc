@@ -1,0 +1,16 @@
+{
+  "compatibility_date": "2025-04-01",
+  "main": "src/index.ts",
+  "name": "plant-backend",
+  "upload_source_maps": true,
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "plant-backend-db",
+      "database_id": "69d5503f-536b-4748-ae6f-967b64e09590"
+    }
+  ]
+}
