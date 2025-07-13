@@ -1,68 +1,104 @@
-# OpenAPI Template
+# Plant Identification API
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/chanfana-openapi-template)
+A Cloudflare Workers backend API for plant identification with multiple provider support and OpenAPI 3.1 auto-generation using [chanfana](https://github.com/cloudflare/chanfana) and [Hono](https://github.com/honojs/hono).
 
-![OpenAPI Template Preview](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/91076b39-1f5b-46f6-7f14-536a6f183000/public)
+## Features
 
-<!-- dash-content-start -->
+- **Multiple Plant ID Providers**: Support for Mock, PlantNet, and OpenAI-powered identification
+- **Fallback System**: Automatic failover between providers for reliable identification
+- **OpenAPI 3.1 Compliant**: Auto-generated schema and request validation
+- **D1 Database Integration**: SQLite database for data persistence
+- **Integration Testing**: Comprehensive test suite using Vitest
 
-This is a Cloudflare Worker with OpenAPI 3.1 Auto Generation and Validation using [chanfana](https://github.com/cloudflare/chanfana) and [Hono](https://github.com/honojs/hono).
+## Plant Identification Providers
 
-This is an example project made to be used as a quick start into building OpenAPI compliant Workers that generates the
-`openapi.json` schema automatically from code and validates the incoming request to the defined parameters or request body.
+- **Mock**: Built-in plant database for testing and fallback
+- **PlantNet**: Real plant identification using the PlantNet API
+- **OpenAI**: AI-powered identification using GPT-4 Vision
 
-This template includes various endpoints, a D1 database, and integration tests using [Vitest](https://vitest.dev/) as examples. In endpoints, you will find [chanfana D1 AutoEndpoints](https://chanfana.com/endpoints/auto/d1) and a [normal endpoint](https://chanfana.com/endpoints/defining-endpoints) to serve as examples for your projects.
-
-Besides being able to see the OpenAPI schema (openapi.json) in the browser, you can also extract the schema locally no hassle by running this command `npm run schema`.
-
-<!-- dash-content-end -->
-
-> [!IMPORTANT]
-> When using C3 to create this project, select "no" when it asks if you want to deploy. You need to follow this project's [setup steps](https://github.com/cloudflare/templates/tree/main/openapi-template#setup-steps) before deploying.
-
-## Getting Started
-
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
-
-```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/openapi-template
-```
-
-A live public deployment of this template is available at [https://openapi-template.templates.workers.dev](https://openapi-template.templates.workers.dev)
 
 ## Setup Steps
 
-1. Install the project dependencies with a package manager of your choice:
+1. Install the project dependencies:
    ```bash
-   npm install
+   pnpm install
    ```
-2. Create a [D1 database](https://developers.cloudflare.com/d1/get-started/) with the name "openapi-template-db":
+
+2. Create a [D1 database](https://developers.cloudflare.com/d1/get-started/):
    ```bash
-   npx wrangler d1 create openapi-template-db
+   npx wrangler d1 create plant-id-db
    ```
-   ...and update the `database_id` field in `wrangler.json` with the new database ID.
-3. Run the following db migration to initialize the database (notice the `migrations` directory in this project):
+   Update the `database_id` field in `wrangler.jsonc` with the new database ID.
+
+3. Set up environment variables:
+   - Copy `.dev.vars` file and add your API keys for local development
+   - For production, set secrets using:
+     ```bash
+     wrangler secret put PLANTNET_API_KEY
+     wrangler secret put OPENAI_API_KEY
+     ```
+
+4. Apply database migrations:
    ```bash
-   npx wrangler d1 migrations apply DB --remote
+   pnpm seedLocalDb
    ```
-4. Deploy the project!
+
+5. Start development server:
    ```bash
-   npx wrangler deploy
+   pnpm dev
    ```
+
+6. Deploy to production:
+   ```bash
+   pnpm deploy
+   ```
+
+## Environment Configuration
+
+Configure plant identification providers in `wrangler.jsonc`:
+
+```json
+{
+  "vars": {
+    "DEFAULT_IDENTIFIER": "mock",
+    "FALLBACK_IDENTIFIERS": "plantnet,openai"
+  }
+}
+```
+
+Available providers: `mock`, `plantnet`, `openai`
+
+## Development Commands
+
+- `pnpm dev` - Start local development server with automatic database seeding
+- `pnpm test` - Run integration tests using Vitest with Cloudflare Workers pool
+- `pnpm seedLocalDb` - Apply D1 database migrations locally
+- `pnpm deploy` - Deploy to Cloudflare Workers (runs migrations first)
+- `pnpm schema` - Generate and extract OpenAPI schema locally
+- `pnpm cf-typegen` - Generate TypeScript types from Wrangler
 
 ## Testing
 
-This template includes integration tests using [Vitest](https://vitest.dev/). To run the tests locally:
+Run integration tests using Vitest:
 
 ```bash
-npm run test
+pnpm test
 ```
 
-Test files are located in the `tests/` directory, with examples demonstrating how to test your endpoints and database interactions.
+Test files are located in the `tests/` directory and run against actual Worker environment with D1 database.
 
-## Project structure
+## Project Structure
 
-1. Your main router is defined in `src/index.ts`.
-2. Each endpoint has its own file in `src/endpoints/`.
-3. Integration tests are located in the `tests/` directory.
-4. For more information read the [chanfana documentation](https://chanfana.com/), [Hono documentation](https://hono.dev/docs), and [Vitest documentation](https://vitest.dev/guide/).
+- `src/index.ts` - Main application entry point with Hono app setup
+- `src/endpoints/` - API endpoint implementations organized by feature
+- `src/types.ts` - Shared TypeScript type definitions
+- `migrations/` - D1 database migration files
+- `tests/` - Integration tests with Vitest configuration
+- `wrangler.jsonc` - Cloudflare Workers configuration
+
+## Documentation
+
+- [Chanfana Documentation](https://chanfana.com/) - OpenAPI framework
+- [Hono Documentation](https://hono.dev/docs) - Web framework
+- [Vitest Documentation](https://vitest.dev/guide/) - Testing framework
+- [Cloudflare D1 Documentation](https://developers.cloudflare.com/d1/) - Database
