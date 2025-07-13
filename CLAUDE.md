@@ -45,6 +45,29 @@ This is a Cloudflare Workers backend API using:
 
 This template demonstrates both Chanfana D1 AutoEndpoints and standard endpoint patterns for building scalable OpenAPI-compliant Workers.
 
+## Environment Configuration
+
+**API Keys and Environment Variables:**
+- Copy `.dev.vars` file and add your actual API keys for local development
+- For production deployment, use `wrangler secret put` command to set secrets
+- Environment variables configured in `wrangler.jsonc`:
+  - `DEFAULT_IDENTIFIER` - Primary plant identification provider (mock/plantnet/openai)
+  - `FALLBACK_IDENTIFIERS` - Comma-separated fallback providers
+- Secrets (set via wrangler CLI, not in config files):
+  - `PLANTNET_API_KEY` - PlantNet API key
+  - `OPENAI_API_KEY` - OpenAI API key
+
+**Setting Production Secrets:**
+```bash
+wrangler secret put PLANTNET_API_KEY
+wrangler secret put OPENAI_API_KEY
+```
+
+**Plant Identification Providers:**
+- **Mock**: Default fallback, uses built-in plant database
+- **PlantNet**: Real plant identification using PlantNet API
+- **OpenAI**: AI-powered identification using GPT-4 Vision
+
 ## Commit Message Guidelines
 
 - Do not mention "Claude" or "AI" in commit messages

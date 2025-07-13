@@ -4,7 +4,8 @@ import type { AppContext } from "../../types";
 import { PlantIdentificationRequestSchema, PlantIdentificationResponseSchema } from "../../types";
 import { apiKeyAuth } from "../../middleware/auth";
 import { validateImageArray } from "../../utils/image";
-import { generatePlantIdentification, storeIdentificationRequest } from "../../services/plantIdentification";
+import { storeIdentificationRequest } from "../../services/plantIdentification";
+import { ImageIdentifierFactory } from "../../services/imageIdentifier/factory";
 
 export class PlantIdentification extends OpenAPIRoute {
   schema = {
@@ -109,8 +110,38 @@ export class PlantIdentification extends OpenAPIRoute {
       // Generate unique request ID
       const requestId = Date.now() + Math.floor(Math.random() * 1000);
 
-      // Generate plant identification
-      const response = await generatePlantIdentification(request, requestId);
+      // Create ImageIdentifier instance from environment variables
+      const factory = ImageIdentifierFactory.fromEnvironment(c.env);
+      const identifier = await factory.createBestAvailableIdentifier();
+
+      // Transform our request format to ImageIdentifier interface
+      const identificationRequest = {
+        images: request.images,
+        latitude: request.latitude,
+        longitude: request.longitude,
+        classification_level: request.classification_level,
+        similar_images: request.similar_images,
+        language: request.language
+      };
+
+      // Perform identification using the selected provider
+      const identificationResult = await identifier.identify(identificationRequest);
+
+      // Transform the result to our API response format
+      const response = {
+        access_token: requestId.toString(),
+        status: "COMPLETED",
+        model_version: "1.0.0",
+        custom_id: request.custom_id || null,
+        input: {
+          latitude: request.latitude || null,
+          longitude: request.longitude || null,
+          similar_images: request.similar_images || false,
+          classification_level: request.classification_level || "species",
+          language: request.language || "en"
+        },
+        result: identificationResult
+      };
 
       // Store the request and response in database
       await storeIdentificationRequest(c.env.DB, apiKeyInfo.id, request, response);
