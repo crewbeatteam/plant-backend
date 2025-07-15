@@ -28,25 +28,6 @@ export const PlantDetailsSchema = z.object({
   }).optional(),
 });
 
-// Plant identification request schema (JSON)
-export const PlantIdentificationRequestSchema = z.object({
-  images: z.array(z.string()).min(1, "At least one image is required"), // base64 encoded images or URLs
-  details: z.string().optional(), // comma-separated list: "url,common_names,gbif_id"
-  classification_level: z.enum(["all", "genus", "species", "infraspecies"]).default("species"),
-  classification_raw: z.boolean().default(false),
-  language: z.string().default("en"),
-  latitude: z.number().optional(), // geographic coordinate
-  longitude: z.number().optional(), // geographic coordinate
-  similar_images: z.boolean().default(false), // include similar images
-  custom_id: z.number().optional(), // unique identifier
-  datetime: z.string().optional(), // ISO format date when images were taken
-  health: z.enum(["only", "auto", "all"]).optional(), // health assessment mode
-  suggestion_filter: z.object({
-    classification: z.string(),
-  }).optional(), // restrict output to specified classes
-  symptoms: z.boolean().default(false), // return disease symptom heatmaps
-});
-
 // Plant identification request schema (FormData)
 export const PlantIdentificationFormDataSchema = z.object({
   images: z.array(z.instanceof(File)).min(1, "At least one image is required"), // uploaded files
@@ -202,7 +183,7 @@ export const PlantDiseaseSchema = z.object({
 });
 
 // Type exports
-export type PlantIdentificationRequest = z.infer<typeof PlantIdentificationRequestSchema>;
+export type PlantIdentificationRequest = z.infer<typeof PlantIdentificationFormDataSchema>;
 export type PlantIdentificationResponse = z.infer<typeof PlantIdentificationResponseSchema>;
 export type HealthAssessmentRequest = z.infer<typeof HealthAssessmentRequestSchema>;
 export type HealthAssessmentResponse = z.infer<typeof HealthAssessmentResponseSchema>;

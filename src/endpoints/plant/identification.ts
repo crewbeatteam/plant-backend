@@ -1,13 +1,13 @@
 import { OpenAPIRoute } from "chanfana";
 import { z } from "zod";
 import type { AppContext } from "../../types";
-import { PlantIdentificationRequestSchema, PlantIdentificationFormDataSchema, PlantIdentificationResponseSchema } from "../../types";
+import { PlantIdentificationFormDataSchema, PlantIdentificationResponseSchema } from "../../types";
 import { apiKeyAuth } from "../../middleware/auth";
 import { validateImageArray } from "../../utils/image";
 import { storeIdentificationRequest } from "../../services/plantIdentification";
 import { ImageIdentifierFactory } from "../../services/imageIdentifier/factory";
 
-// Helper function to parse FormData
+// Helper function to parse FormData (PlantNet style with images param)
 async function parseFormData(formData: FormData) {
   const images: File[] = [];
   const data: any = {};
@@ -55,9 +55,6 @@ export class PlantIdentification extends OpenAPIRoute {
     request: {
       body: {
         content: {
-          "application/json": {
-            schema: PlantIdentificationRequestSchema,
-          },
           "multipart/form-data": {
             schema: PlantIdentificationFormDataSchema,
           },
@@ -128,50 +125,24 @@ export class PlantIdentification extends OpenAPIRoute {
         return c.json({ error: "Authentication failed" }, 401);
       }
 
-      // Parse and validate request body based on content type
-      const contentType = c.req.header("content-type") || "";
-      let request;
+      // Parse and validate FormData request
+      const formData = await c.req.formData();
+      const parsedData = await parseFormData(formData);
+      const validation = PlantIdentificationFormDataSchema.safeParse(parsedData);
       
-      if (contentType.includes("multipart/form-data")) {
-        // Handle FormData
-        const formData = await c.req.formData();
-        const parsedData = await parseFormData(formData);
-        const validation = PlantIdentificationFormDataSchema.safeParse(parsedData);
-        
-        if (!validation.success) {
-          return c.json({
-            error: "Invalid request parameters",
-            details: validation.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`)
-          }, 400);
-        }
-        
-        request = validation.data;
-      } else {
-        // Handle JSON
-        const body = await c.req.json();
-        const validation = PlantIdentificationRequestSchema.safeParse(body);
-        
-        if (!validation.success) {
-          return c.json({
-            error: "Invalid request parameters",
-            details: validation.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`)
-          }, 400);
-        }
-        
-        request = validation.data;
+      if (!validation.success) {
+        return c.json({
+          error: "Invalid request parameters",
+          details: validation.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`)
+        }, 400);
       }
+      
+      const request = validation.data;
 
-      // Convert images to base64 strings if they are File objects
-      let imageStrings: string[];
-      if (request.images.length > 0 && request.images[0] instanceof File) {
-        // Convert File objects to base64
-        imageStrings = await Promise.all(
-          (request.images as File[]).map(file => fileToBase64(file))
-        );
-      } else {
-        // Already base64 strings
-        imageStrings = request.images as string[];
-      }
+      // Convert File objects to base64 strings
+      const imageStrings = await Promise.all(
+        (request.images as File[]).map(file => fileToBase64(file))
+      );
 
       // Validate images
       const imageValidation = validateImageArray(imageStrings);

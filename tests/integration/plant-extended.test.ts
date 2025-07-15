@@ -4,6 +4,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Mock base64 image data
 const MOCK_BASE64_IMAGE = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=";
 
+// Helper function to create a mock File object for testing
+function createMockFile(name: string, type: string, content: string): File {
+  // Convert base64 to binary string
+  const base64Data = content.replace(/^data:image\/[a-z]+;base64,/, "");
+  const binaryString = atob(base64Data);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return new File([bytes], name, { type });
+}
+
 async function createApiKey(name: string = "Test API Key") {
   const response = await SELF.fetch("http://local.test/admin/api-keys", {
     method: "POST",
@@ -207,17 +219,18 @@ describe("Plant.ID v3 Extended API Tests", () => {
 
   describe("Advanced identification features", () => {
     it("should handle similar_images parameter", async () => {
+      const formData = new FormData();
+      const mockFile = createMockFile("plant.jpg", "image/jpeg", MOCK_BASE64_IMAGE);
+      formData.append("images", mockFile);
+      formData.append("similar_images", "true");
+      formData.append("details", "common_names,taxonomy");
+      
       const response = await SELF.fetch("http://local.test/v3/identification", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Api-Key": apiKey,
         },
-        body: JSON.stringify({
-          images: [MOCK_BASE64_IMAGE],
-          similar_images: true,
-          details: "common_names,taxonomy",
-        }),
+        body: formData,
       });
 
       expect(response.status).toBe(200);
@@ -232,17 +245,17 @@ describe("Plant.ID v3 Extended API Tests", () => {
 
     it("should handle custom_id parameter", async () => {
       const customId = 12345;
+      const formData = new FormData();
+      const mockFile = createMockFile("plant.jpg", "image/jpeg", MOCK_BASE64_IMAGE);
+      formData.append("images", mockFile);
+      formData.append("custom_id", customId.toString());
       
       const response = await SELF.fetch("http://local.test/v3/identification", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Api-Key": apiKey,
         },
-        body: JSON.stringify({
-          images: [MOCK_BASE64_IMAGE],
-          custom_id: customId,
-        }),
+        body: formData,
       });
 
       expect(response.status).toBe(200);
@@ -252,16 +265,17 @@ describe("Plant.ID v3 Extended API Tests", () => {
     });
 
     it("should handle classification_level parameter", async () => {
+      const formData = new FormData();
+      const mockFile = createMockFile("plant.jpg", "image/jpeg", MOCK_BASE64_IMAGE);
+      formData.append("images", mockFile);
+      formData.append("classification_level", "genus");
+      
       const response = await SELF.fetch("http://local.test/v3/identification", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Api-Key": apiKey,
         },
-        body: JSON.stringify({
-          images: [MOCK_BASE64_IMAGE],
-          classification_level: "genus",
-        }),
+        body: formData,
       });
 
       expect(response.status).toBe(200);

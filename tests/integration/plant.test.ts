@@ -80,20 +80,19 @@ describe("Plant API Integration Tests", () => {
 
   describe("POST /v3/identification", () => {
     it("should successfully identify a plant with valid API key and image", async () => {
-      const requestData = {
-        images: [MOCK_BASE64_IMAGE],
-        details: "common_names,url,taxonomy",
-        classification_level: "all",
-        language: "en"
-      };
+      const formData = new FormData();
+      const mockFile = createMockFile("plant.jpg", "image/jpeg", MOCK_BASE64_IMAGE);
+      formData.append("images", mockFile);
+      formData.append("details", "common_names,url,taxonomy");
+      formData.append("classification_level", "all");
+      formData.append("language", "en");
 
       const response = await SELF.fetch("http://local.test/v3/identification", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Api-Key": apiKey,
         },
-        body: JSON.stringify(requestData),
+        body: formData,
       });
 
       expect(response.status).toBe(200);
@@ -120,14 +119,13 @@ describe("Plant API Integration Tests", () => {
     });
 
     it("should return 401 without API key", async () => {
-      const requestData = {
-        images: [MOCK_BASE64_IMAGE],
-      };
+      const formData = new FormData();
+      const mockFile = createMockFile("plant.jpg", "image/jpeg", MOCK_BASE64_IMAGE);
+      formData.append("images", mockFile);
 
       const response = await SELF.fetch("http://local.test/v3/identification", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestData),
+        body: formData,
       });
 
       expect(response.status).toBe(401);
@@ -136,17 +134,16 @@ describe("Plant API Integration Tests", () => {
     });
 
     it("should return 401 with invalid API key", async () => {
-      const requestData = {
-        images: [MOCK_BASE64_IMAGE],
-      };
+      const formData = new FormData();
+      const mockFile = createMockFile("plant.jpg", "image/jpeg", MOCK_BASE64_IMAGE);
+      formData.append("images", mockFile);
 
       const response = await SELF.fetch("http://local.test/v3/identification", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Api-Key": "invalid-api-key",
         },
-        body: JSON.stringify(requestData),
+        body: formData,
       });
 
       expect(response.status).toBe(401);
@@ -155,17 +152,15 @@ describe("Plant API Integration Tests", () => {
     });
 
     it("should return 400 for missing images", async () => {
-      const requestData = {
-        images: [],
-      };
+      const formData = new FormData();
+      // Don't append any images to test missing images
 
       const response = await SELF.fetch("http://local.test/v3/identification", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Api-Key": apiKey,
         },
-        body: JSON.stringify(requestData),
+        body: formData,
       });
 
       expect(response.status).toBe(400);
@@ -174,24 +169,23 @@ describe("Plant API Integration Tests", () => {
       expect(body.details).toContain("images: At least one image is required");
     });
 
-    it("should return 400 for invalid base64 image", async () => {
-      const requestData = {
-        images: ["invalid-base64-image"],
-      };
+    it("should return 400 for invalid file type", async () => {
+      const formData = new FormData();
+      // Create a mock file with invalid content type
+      const invalidFile = new File(["invalid content"], "test.txt", { type: "text/plain" });
+      formData.append("images", invalidFile);
 
       const response = await SELF.fetch("http://local.test/v3/identification", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Api-Key": apiKey,
         },
-        body: JSON.stringify(requestData),
+        body: formData,
       });
 
       expect(response.status).toBe(400);
       const body = await response.json();
       expect(body.error).toBe("Invalid images");
-      expect(body.details[0]).toContain("Invalid base64 image format");
     });
 
     it("should successfully identify a plant using FormData with file upload", async () => {
@@ -349,18 +343,17 @@ describe("Plant API Integration Tests", () => {
 
   describe("Classification levels and details", () => {
     it("should respect classification_level parameter", async () => {
-      const requestData = {
-        images: [MOCK_BASE64_IMAGE],
-        classification_level: "genus",
-      };
+      const formData = new FormData();
+      const mockFile = createMockFile("plant.jpg", "image/jpeg", MOCK_BASE64_IMAGE);
+      formData.append("images", mockFile);
+      formData.append("classification_level", "genus");
 
       const response = await SELF.fetch("http://local.test/v3/identification", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Api-Key": apiKey,
         },
-        body: JSON.stringify(requestData),
+        body: formData,
       });
 
       expect(response.status).toBe(200);
@@ -369,18 +362,17 @@ describe("Plant API Integration Tests", () => {
     });
 
     it("should include requested details in plant suggestions", async () => {
-      const requestData = {
-        images: [MOCK_BASE64_IMAGE],
-        details: "common_names,taxonomy,url",
-      };
+      const formData = new FormData();
+      const mockFile = createMockFile("plant.jpg", "image/jpeg", MOCK_BASE64_IMAGE);
+      formData.append("images", mockFile);
+      formData.append("details", "common_names,taxonomy,url");
 
       const response = await SELF.fetch("http://local.test/v3/identification", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Api-Key": apiKey,
         },
-        body: JSON.stringify(requestData),
+        body: formData,
       });
 
       expect(response.status).toBe(200);
