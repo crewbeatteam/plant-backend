@@ -1,0 +1,1375 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Plant.ID v3 API",
+    "version": "3.0.0",
+    "description": "AI-powered plant identification and health assessment API compatible with Plant.ID v3."
+  },
+  "components": {
+    "schemas": {},
+    "parameters": {}
+  },
+  "paths": {
+    "/v3/identification": {
+      "post": {
+        "tags": [
+          "Plant Identification"
+        ],
+        "summary": "Identify plant species from images",
+        "description": "Submit images for plant species identification using AI",
+        "operationId": "post_PlantIdentification",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "Api-Key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  },
+                  "details": {
+                    "type": "string"
+                  },
+                  "classification_level": {
+                    "type": "string",
+                    "enum": [
+                      "all",
+                      "genus",
+                      "species",
+                      "infraspecies"
+                    ],
+                    "default": "species"
+                  },
+                  "classification_raw": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "language": {
+                    "type": "string",
+                    "default": "en"
+                  },
+                  "latitude": {
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "type": "number"
+                  },
+                  "similar_images": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "custom_id": {
+                    "type": "number"
+                  },
+                  "datetime": {
+                    "type": "string"
+                  },
+                  "health": {
+                    "type": "string",
+                    "enum": [
+                      "only",
+                      "auto",
+                      "all"
+                    ]
+                  },
+                  "suggestion_filter": {
+                    "type": "object",
+                    "properties": {
+                      "classification": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "classification"
+                    ]
+                  },
+                  "symptoms": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                },
+                "required": [
+                  "images"
+                ]
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "images": {
+                    "type": "array",
+                    "items": {},
+                    "minItems": 1
+                  },
+                  "details": {
+                    "type": "string"
+                  },
+                  "classification_level": {
+                    "type": "string",
+                    "enum": [
+                      "all",
+                      "genus",
+                      "species",
+                      "infraspecies"
+                    ],
+                    "default": "species"
+                  },
+                  "classification_raw": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "language": {
+                    "type": "string",
+                    "default": "en"
+                  },
+                  "latitude": {
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "type": "number"
+                  },
+                  "similar_images": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "custom_id": {
+                    "type": "number"
+                  },
+                  "datetime": {
+                    "type": "string"
+                  },
+                  "health": {
+                    "type": "string",
+                    "enum": [
+                      "only",
+                      "auto",
+                      "all"
+                    ]
+                  },
+                  "suggestion_filter": {
+                    "type": "object",
+                    "properties": {
+                      "classification": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "classification"
+                    ]
+                  },
+                  "symptoms": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                },
+                "required": [
+                  "images"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Plant identification completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "custom_id": {
+                      "type": "number"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "is_plant": {
+                          "type": "object",
+                          "properties": {
+                            "probability": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "threshold": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "binary": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "probability",
+                            "threshold",
+                            "binary"
+                          ]
+                        },
+                        "classification": {
+                          "type": "object",
+                          "properties": {
+                            "suggestions": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "number"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "probability": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "confirmed": {
+                                    "type": "boolean",
+                                    "default": false
+                                  },
+                                  "similar_images": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "url": {
+                                          "type": "string"
+                                        },
+                                        "license_name": {
+                                          "type": "string"
+                                        },
+                                        "license_url": {
+                                          "type": "string"
+                                        },
+                                        "citation": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "id",
+                                        "url"
+                                      ]
+                                    }
+                                  },
+                                  "details": {
+                                    "type": "object",
+                                    "properties": {
+                                      "url": {
+                                        "type": "string"
+                                      },
+                                      "common_names": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "gbif_id": {
+                                        "type": "number"
+                                      },
+                                      "inaturalist_id": {
+                                        "type": "number"
+                                      },
+                                      "wikipedia": {
+                                        "type": "object",
+                                        "properties": {
+                                          "title": {
+                                            "type": "string"
+                                          },
+                                          "url": {
+                                            "type": "string"
+                                          },
+                                          "image": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "title",
+                                          "url"
+                                        ]
+                                      },
+                                      "taxonomy": {
+                                        "type": "object",
+                                        "properties": {
+                                          "kingdom": {
+                                            "type": "string"
+                                          },
+                                          "phylum": {
+                                            "type": "string"
+                                          },
+                                          "class": {
+                                            "type": "string"
+                                          },
+                                          "order": {
+                                            "type": "string"
+                                          },
+                                          "family": {
+                                            "type": "string"
+                                          },
+                                          "genus": {
+                                            "type": "string"
+                                          },
+                                          "species": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "kingdom",
+                                          "phylum",
+                                          "class",
+                                          "order",
+                                          "family",
+                                          "genus",
+                                          "species"
+                                        ]
+                                      }
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "probability"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "suggestions"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "is_plant",
+                        "classification"
+                      ]
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "sla_compliant_client": {
+                      "type": "boolean"
+                    },
+                    "sla_compliant_system": {
+                      "type": "boolean"
+                    },
+                    "created": {
+                      "type": "string"
+                    },
+                    "completed": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "access_token",
+                    "result",
+                    "status",
+                    "sla_compliant_client",
+                    "sla_compliant_system",
+                    "created",
+                    "completed"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/health_assessment": {
+      "post": {
+        "tags": [
+          "Plant Health"
+        ],
+        "summary": "Assess plant health and detect diseases",
+        "description": "Submit images for plant health assessment and disease detection using AI",
+        "operationId": "post_PlantHealthAssessment",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "Api-Key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  },
+                  "details": {
+                    "type": "string"
+                  },
+                  "language": {
+                    "type": "string",
+                    "default": "en"
+                  }
+                },
+                "required": [
+                  "images"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Health assessment completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "custom_id": {
+                      "type": "number"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "is_healthy": {
+                          "type": "object",
+                          "properties": {
+                            "probability": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "threshold": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "binary": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "probability",
+                            "threshold",
+                            "binary"
+                          ]
+                        },
+                        "disease": {
+                          "type": "object",
+                          "properties": {
+                            "suggestions": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "number"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "probability": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "redundant": {
+                                    "type": "boolean"
+                                  },
+                                  "similar_images": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "url": {
+                                          "type": "string"
+                                        },
+                                        "license_name": {
+                                          "type": "string"
+                                        },
+                                        "license_url": {
+                                          "type": "string"
+                                        },
+                                        "citation": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "id",
+                                        "url"
+                                      ]
+                                    }
+                                  },
+                                  "details": {
+                                    "type": "object",
+                                    "properties": {
+                                      "local_name": {
+                                        "type": "string"
+                                      },
+                                      "description": {
+                                        "type": "string"
+                                      },
+                                      "url": {
+                                        "type": "string"
+                                      },
+                                      "treatment": {
+                                        "type": "object",
+                                        "properties": {
+                                          "biological": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "chemical": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "prevention": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "classification": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "common_names": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "cause": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "probability"
+                                ]
+                              }
+                            },
+                            "question": {
+                              "type": "object",
+                              "properties": {
+                                "text": {
+                                  "type": "string"
+                                },
+                                "options": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "suggestion_index": {
+                                        "type": "number"
+                                      },
+                                      "entity_id": {
+                                        "type": "number"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "suggestion_index",
+                                      "entity_id",
+                                      "name"
+                                    ]
+                                  }
+                                }
+                              },
+                              "required": [
+                                "text",
+                                "options"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "suggestions"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "is_healthy",
+                        "disease"
+                      ]
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "sla_compliant_client": {
+                      "type": "boolean"
+                    },
+                    "sla_compliant_system": {
+                      "type": "boolean"
+                    },
+                    "created": {
+                      "type": "string"
+                    },
+                    "completed": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "access_token",
+                    "result",
+                    "status",
+                    "sla_compliant_client",
+                    "sla_compliant_system",
+                    "created",
+                    "completed"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/usage_info": {
+      "get": {
+        "tags": [
+          "API Management"
+        ],
+        "summary": "Get API key usage information",
+        "description": "Retrieve status, limits, usage statistics, and remaining credits for your API key",
+        "operationId": "get_UsageInfo",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "Api-Key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usage information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "credit_limits": {
+                      "type": "object",
+                      "properties": {
+                        "day": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "week": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "month": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "total": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "day",
+                        "week",
+                        "month",
+                        "total"
+                      ]
+                    },
+                    "used": {
+                      "type": "object",
+                      "properties": {
+                        "day": {
+                          "type": "number"
+                        },
+                        "week": {
+                          "type": "number"
+                        },
+                        "month": {
+                          "type": "number"
+                        },
+                        "total": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "day",
+                        "week",
+                        "month",
+                        "total"
+                      ]
+                    },
+                    "can_use_credits": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "boolean"
+                        },
+                        "reason": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "reason"
+                      ]
+                    },
+                    "remaining": {
+                      "type": "object",
+                      "properties": {
+                        "day": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "week": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "month": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "total": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "day",
+                        "week",
+                        "month",
+                        "total"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "active",
+                    "credit_limits",
+                    "used",
+                    "can_use_credits",
+                    "remaining"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/kb/plants/name_search": {
+      "get": {
+        "tags": [
+          "Plant Knowledge Base"
+        ],
+        "summary": "Search plant knowledge base",
+        "description": "Search plants by scientific names, common names, or synonyms. This endpoint is in beta testing.",
+        "operationId": "get_PlantSearch",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Search query for plant names"
+            },
+            "required": true,
+            "description": "Search query for plant names",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Maximum results (1-20, default 10)"
+            },
+            "required": false,
+            "description": "Maximum results (1-20, default 10)",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "default": "en",
+              "description": "Language code for common names (ISO 639-1)"
+            },
+            "required": false,
+            "description": "Language code for common names (ISO 639-1)",
+            "name": "language",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Include 64x64 base64 thumbnails"
+            },
+            "required": false,
+            "description": "Include 64x64 base64 thumbnails",
+            "name": "thumbnails",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "Api-Key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "matched_in": {
+                            "type": "string"
+                          },
+                          "matched_in_type": {
+                            "type": "string",
+                            "enum": [
+                              "entity_name",
+                              "synonym",
+                              "common_name"
+                            ]
+                          },
+                          "access_token": {
+                            "type": "string"
+                          },
+                          "match_position": {
+                            "type": "number"
+                          },
+                          "match_length": {
+                            "type": "number"
+                          },
+                          "entity_name": {
+                            "type": "string"
+                          },
+                          "thumbnail": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "matched_in",
+                          "matched_in_type",
+                          "access_token",
+                          "match_position",
+                          "match_length",
+                          "entity_name"
+                        ]
+                      }
+                    },
+                    "entities_trimmed": {
+                      "type": "boolean"
+                    },
+                    "limit": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "entities",
+                    "entities_trimmed",
+                    "limit"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid search parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/kb/plants/{access_token}": {
+      "get": {
+        "tags": [
+          "Plant Knowledge Base"
+        ],
+        "summary": "Get plant details",
+        "description": "Get detailed information about a plant using access token from search. Costs 0.5 credits per call.",
+        "operationId": "get_PlantDetail",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Access token from plant search"
+            },
+            "required": true,
+            "description": "Access token from plant search",
+            "name": "access_token",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Comma-separated list of requested details"
+            },
+            "required": true,
+            "description": "Comma-separated list of requested details",
+            "name": "details",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "default": "en",
+              "description": "Language code (ISO 639-1)"
+            },
+            "required": false,
+            "description": "Language code (ISO 639-1)",
+            "name": "language",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "Api-Key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Plant details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "entity_name": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "access_token",
+                    "entity_name",
+                    "details"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Plant not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/api-keys": {
+      "post": {
+        "tags": [
+          "API Management"
+        ],
+        "summary": "Create a new API key",
+        "description": "Generate a new API key for accessing the Plant.ID API",
+        "operationId": "post_CreateApiKey",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "Descriptive name for the API key"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "API key created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "api_key": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "api_key",
+                    "created_at"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}
