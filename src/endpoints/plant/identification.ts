@@ -125,6 +125,15 @@ export class PlantIdentification extends OpenAPIRoute {
         return c.json({ error: "Authentication failed" }, 401);
       }
 
+      // Check content type
+      const contentType = c.req.header("content-type") || "";
+      if (!contentType.includes("multipart/form-data")) {
+        return c.json({
+          error: "Invalid content type",
+          details: ["Content-Type must be multipart/form-data for file uploads"]
+        }, 400);
+      }
+
       // Parse and validate FormData request
       const formData = await c.req.formData();
       const parsedData = await parseFormData(formData);

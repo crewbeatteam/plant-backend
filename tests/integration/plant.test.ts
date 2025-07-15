@@ -263,6 +263,22 @@ describe("Plant API Integration Tests", () => {
       expect(body.error).toBe("Invalid request parameters");
       expect(body.details).toContain("images: At least one image is required");
     });
+
+    it("should return 400 for invalid content type", async () => {
+      const response = await SELF.fetch("http://local.test/v3/identification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Api-Key": apiKey,
+        },
+        body: JSON.stringify({ images: ["test"] }),
+      });
+
+      expect(response.status).toBe(400);
+      const body = await response.json();
+      expect(body.error).toBe("Invalid content type");
+      expect(body.details).toContain("Content-Type must be multipart/form-data for file uploads");
+    });
   });
 
   describe("POST /v3/health_assessment", () => {
