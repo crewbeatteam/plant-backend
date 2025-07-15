@@ -4,6 +4,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Mock base64 image data (minimal valid base64)
 const MOCK_BASE64_IMAGE = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=";
 
+// Helper function to create a mock File object for testing
+function createMockFile(name: string, type: string, content: string): File {
+  // Convert base64 to binary string
+  const base64Data = content.replace(/^data:image\/[a-z]+;base64,/, "");
+  const binaryString = atob(base64Data);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return new File([bytes], name, { type });
+}
+
 // Helper function to create an API key
 async function createApiKey(name: string = "Test API Key") {
   const response = await SELF.fetch("http://local.test/admin/api-keys", {
@@ -180,6 +192,82 @@ describe("Plant API Integration Tests", () => {
       const body = await response.json();
       expect(body.error).toBe("Invalid images");
       expect(body.details[0]).toContain("Invalid base64 image format");
+    });
+
+    it("should successfully identify a plant using FormData with file upload", async () => {
+      const formData = new FormData();
+      
+      // Create a mock file from base64 data
+      const mockFile = createMockFile("plant.jpg", "image/jpeg", MOCK_BASE64_IMAGE);
+      formData.append("images", mockFile);
+      formData.append("classification_level", "species");
+      formData.append("language", "en");
+      formData.append("similar_images", "false");
+
+      const response = await SELF.fetch("http://local.test/v3/identification", {
+        method: "POST",
+        headers: {
+          "Api-Key": apiKey,
+        },
+        body: formData,
+      });
+
+      expect(response.status).toBe(200);
+
+      const body = await response.json();
+      expect(body.access_token).toBeTypeOf("string");
+      expect(body.status).toBe("COMPLETED");
+      expect(body.result).toHaveProperty("is_plant");
+      expect(body.result.is_plant).toHaveProperty("probability");
+      expect(body.result.is_plant).toHaveProperty("binary");
+      expect(body.result).toHaveProperty("classification");
+      expect(body.result.classification).toHaveProperty("suggestions");
+      expect(Array.isArray(body.result.classification.suggestions)).toBe(true);
+    });
+
+    it("should handle multiple files in FormData", async () => {
+      const formData = new FormData();
+      
+      // Create multiple mock files
+      const mockFile1 = createMockFile("plant1.jpg", "image/jpeg", MOCK_BASE64_IMAGE);
+      const mockFile2 = createMockFile("plant2.jpg", "image/jpeg", MOCK_BASE64_IMAGE);
+      formData.append("images", mockFile1);
+      formData.append("images", mockFile2);
+      formData.append("classification_level", "all");
+
+      const response = await SELF.fetch("http://local.test/v3/identification", {
+        method: "POST",
+        headers: {
+          "Api-Key": apiKey,
+        },
+        body: formData,
+      });
+
+      expect(response.status).toBe(200);
+
+      const body = await response.json();
+      expect(body.access_token).toBeTypeOf("string");
+      expect(body.status).toBe("COMPLETED");
+      expect(body.result).toHaveProperty("is_plant");
+      expect(body.result).toHaveProperty("classification");
+    });
+
+    it("should return 400 for FormData without images", async () => {
+      const formData = new FormData();
+      formData.append("classification_level", "species");
+
+      const response = await SELF.fetch("http://local.test/v3/identification", {
+        method: "POST",
+        headers: {
+          "Api-Key": apiKey,
+        },
+        body: formData,
+      });
+
+      expect(response.status).toBe(400);
+      const body = await response.json();
+      expect(body.error).toBe("Invalid request parameters");
+      expect(body.details).toContain("images: At least one image is required");
     });
   });
 

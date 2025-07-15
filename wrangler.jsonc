@@ -9,7 +9,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "plant-backend-db",
+      "database_name": "plant-id-db",
       "database_id": "69d5503f-536b-4748-ae6f-967b64e09590"
     }
   ],

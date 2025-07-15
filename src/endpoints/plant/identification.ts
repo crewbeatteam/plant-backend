@@ -1,11 +1,51 @@
 import { OpenAPIRoute } from "chanfana";
 import { z } from "zod";
 import type { AppContext } from "../../types";
-import { PlantIdentificationRequestSchema, PlantIdentificationResponseSchema } from "../../types";
+import { PlantIdentificationRequestSchema, PlantIdentificationFormDataSchema, PlantIdentificationResponseSchema } from "../../types";
 import { apiKeyAuth } from "../../middleware/auth";
 import { validateImageArray } from "../../utils/image";
 import { storeIdentificationRequest } from "../../services/plantIdentification";
 import { ImageIdentifierFactory } from "../../services/imageIdentifier/factory";
+
+// Helper function to parse FormData
+async function parseFormData(formData: FormData) {
+  const images: File[] = [];
+  const data: any = {};
+  
+  for (const [key, value] of formData.entries()) {
+    if (key === "images") {
+      if (value instanceof File) {
+        images.push(value);
+      }
+    } else {
+      // Handle other form fields
+      if (typeof value === "string") {
+        // Parse boolean and numeric values
+        if (value === "true") {
+          data[key] = true;
+        } else if (value === "false") {
+          data[key] = false;
+        } else if (!isNaN(Number(value)) && value !== "") {
+          data[key] = Number(value);
+        } else {
+          data[key] = value;
+        }
+      }
+    }
+  }
+  
+  data.images = images;
+  return data;
+}
+
+// Helper function to convert File to base64
+async function fileToBase64(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const uint8Array = new Uint8Array(arrayBuffer);
+  const binaryString = Array.from(uint8Array, byte => String.fromCharCode(byte)).join("");
+  const base64 = btoa(binaryString);
+  return `data:${file.type};base64,${base64}`;
+}
 
 export class PlantIdentification extends OpenAPIRoute {
   schema = {
@@ -17,6 +57,9 @@ export class PlantIdentification extends OpenAPIRoute {
         content: {
           "application/json": {
             schema: PlantIdentificationRequestSchema,
+          },
+          "multipart/form-data": {
+            schema: PlantIdentificationFormDataSchema,
           },
         },
       },
@@ -85,21 +128,53 @@ export class PlantIdentification extends OpenAPIRoute {
         return c.json({ error: "Authentication failed" }, 401);
       }
 
-      // Parse and validate request body
-      const body = await c.req.json();
-      const validation = PlantIdentificationRequestSchema.safeParse(body);
+      // Parse and validate request body based on content type
+      const contentType = c.req.header("content-type") || "";
+      let request;
       
-      if (!validation.success) {
-        return c.json({
-          error: "Invalid request parameters",
-          details: validation.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`)
-        }, 400);
+      if (contentType.includes("multipart/form-data")) {
+        // Handle FormData
+        const formData = await c.req.formData();
+        const parsedData = await parseFormData(formData);
+        const validation = PlantIdentificationFormDataSchema.safeParse(parsedData);
+        
+        if (!validation.success) {
+          return c.json({
+            error: "Invalid request parameters",
+            details: validation.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`)
+          }, 400);
+        }
+        
+        request = validation.data;
+      } else {
+        // Handle JSON
+        const body = await c.req.json();
+        const validation = PlantIdentificationRequestSchema.safeParse(body);
+        
+        if (!validation.success) {
+          return c.json({
+            error: "Invalid request parameters",
+            details: validation.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`)
+          }, 400);
+        }
+        
+        request = validation.data;
       }
 
-      const request = validation.data;
+      // Convert images to base64 strings if they are File objects
+      let imageStrings: string[];
+      if (request.images.length > 0 && request.images[0] instanceof File) {
+        // Convert File objects to base64
+        imageStrings = await Promise.all(
+          (request.images as File[]).map(file => fileToBase64(file))
+        );
+      } else {
+        // Already base64 strings
+        imageStrings = request.images as string[];
+      }
 
       // Validate images
-      const imageValidation = validateImageArray(request.images);
+      const imageValidation = validateImageArray(imageStrings);
       if (!imageValidation.isValid) {
         return c.json({
           error: "Invalid images",
@@ -116,7 +191,7 @@ export class PlantIdentification extends OpenAPIRoute {
 
       // Transform our request format to ImageIdentifier interface
       const identificationRequest = {
-        images: request.images,
+        images: imageStrings,
         latitude: request.latitude,
         longitude: request.longitude,
         classification_level: request.classification_level,
@@ -144,7 +219,12 @@ export class PlantIdentification extends OpenAPIRoute {
       };
 
       // Store the request and response in database
-      await storeIdentificationRequest(c.env.DB, apiKeyInfo.id, request, response);
+      // Create a request object with base64 images for database storage
+      const requestForStorage = {
+        ...request,
+        images: imageStrings
+      };
+      await storeIdentificationRequest(c.env.DB, apiKeyInfo.id, requestForStorage, response);
 
       return c.json(response, 200);
 
