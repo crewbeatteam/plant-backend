@@ -1,10 +1,18 @@
 import { ApiException, fromHono } from "chanfana";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { plantRouter } from "./endpoints/plant/router";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 
 // Start a Hono app
 const app = new Hono<{ Bindings: Env }>();
+
+// Add CORS middleware
+app.use('*', cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Api-Key'],
+}));
 
 app.onError((err, c) => {
   if (err instanceof ApiException) {
