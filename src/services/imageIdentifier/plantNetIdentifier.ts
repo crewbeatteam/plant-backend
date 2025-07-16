@@ -45,24 +45,28 @@ export class PlantNetIdentifier implements ImageIdentifier {
       }
       console.log(`PlantNet: Added ${request.images.length} organs (all auto)`);
 
-      // Add optional parameters
+      // Build URL with query parameters (not FormData)
+      const urlParams = new URLSearchParams();
+      urlParams.append('api-key', this.apiKey);
+      
+      // Add optional parameters as query params
       if (request.similar_images) {
-        formData.append('include-related-images', 'true');
+        urlParams.append('include-related-images', 'true');
         console.log('PlantNet: Added include-related-images=true');
       }
       
       // Limit results for better performance
-      formData.append('nb-results', '5');
+      urlParams.append('nb-results', '5');
       console.log('PlantNet: Added nb-results=5');
       
       // Set language if provided
       if (request.language) {
-        formData.append('lang', request.language);
+        urlParams.append('lang', request.language);
         console.log('PlantNet: Added lang=' + request.language);
       }
 
       // Call PlantNet API v2 - use the identify endpoint with all projects
-      const url = `${this.baseUrl}/identify/all?api-key=${this.apiKey}`;
+      const url = `${this.baseUrl}/identify/all?${urlParams.toString()}`;
       console.log('PlantNet API URL:', url);
       
       const response = await fetch(url, {
