@@ -29,33 +29,50 @@ export class PlantNetIdentifier implements ImageIdentifier {
       // Convert base64 images to form data
       const formData = new FormData();
       
+      console.log('PlantNet: Processing', request.images.length, 'images');
+      
+      // Add all images first
       for (let i = 0; i < request.images.length; i++) {
         const imageData = this.extractImageData(request.images[i]);
         const blob = new Blob([imageData], { type: 'image/jpeg' });
         formData.append('images', blob, `image${i}.jpg`);
+        console.log(`PlantNet: Added image ${i} (${imageData.length} bytes)`);
+      }
+      
+      // Add organs for each image (must match number of images)
+      for (let i = 0; i < request.images.length; i++) {
         formData.append('organs', 'auto'); // Let AI detect the organ
       }
+      console.log(`PlantNet: Added ${request.images.length} organs (all auto)`);
 
       // Add optional parameters
       if (request.similar_images) {
         formData.append('include-related-images', 'true');
+        console.log('PlantNet: Added include-related-images=true');
       }
       
       // Limit results for better performance
       formData.append('nb-results', '5');
+      console.log('PlantNet: Added nb-results=5');
       
       // Set language if provided
       if (request.language) {
         formData.append('lang', request.language);
+        console.log('PlantNet: Added lang=' + request.language);
       }
 
       // Call PlantNet API v2 - use the identify endpoint with all projects
-      const response = await fetch(`${this.baseUrl}/identify/all?api-key=${this.apiKey}`, {
+      const url = `${this.baseUrl}/identify/all?api-key=${this.apiKey}`;
+      console.log('PlantNet API URL:', url);
+      
+      const response = await fetch(url, {
         method: 'POST',
         body: formData
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('PlantNet API error response:', errorText);
         throw new Error(`PlantNet API error: ${response.status} ${response.statusText}`);
       }
 
