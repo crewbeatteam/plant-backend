@@ -279,6 +279,26 @@ describe("Plant API Integration Tests", () => {
       expect(body.error).toBe("Invalid content type");
       expect(body.details).toContain("Content-Type must be multipart/form-data for file uploads");
     });
+
+    it("should handle JSON object parameters in FormData", async () => {
+      const formData = new FormData();
+      const mockFile = createMockFile("plant.jpg", "image/jpeg", MOCK_BASE64_IMAGE);
+      formData.append("images", mockFile);
+      formData.append("suggestion_filter", JSON.stringify({ classification: "Plantae" }));
+
+      const response = await SELF.fetch("http://local.test/v3/identification", {
+        method: "POST",
+        headers: {
+          "Api-Key": apiKey,
+        },
+        body: formData,
+      });
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.access_token).toBeTypeOf("string");
+      expect(body.status).toBe("COMPLETED");
+    });
   });
 
   describe("POST /v3/health_assessment", () => {

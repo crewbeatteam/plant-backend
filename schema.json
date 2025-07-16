@@ -98,7 +98,8 @@
                     },
                     "required": [
                       "classification"
-                    ]
+                    ],
+                    "description": "JSON string in FormData: {\"classification\": \"value\"}"
                   },
                   "symptoms": {
                     "type": "boolean",

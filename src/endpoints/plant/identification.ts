@@ -20,8 +20,16 @@ async function parseFormData(formData: FormData) {
     } else {
       // Handle other form fields
       if (typeof value === "string") {
+        // Handle JSON object fields (like suggestion_filter)
+        if (key === "suggestion_filter") {
+          try {
+            data[key] = JSON.parse(value);
+          } catch {
+            data[key] = value; // If JSON parsing fails, keep as string
+          }
+        }
         // Parse boolean and numeric values
-        if (value === "true") {
+        else if (value === "true") {
           data[key] = true;
         } else if (value === "false") {
           data[key] = false;

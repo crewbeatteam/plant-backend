@@ -47,7 +47,7 @@ export const PlantIdentificationFormDataSchema = z.object({
   health: z.enum(["only", "auto", "all"]).optional(), // health assessment mode
   suggestion_filter: z.object({
     classification: z.string(),
-  }).optional(), // restrict output to specified classes
+  }).optional().describe("JSON string in FormData: {\"classification\": \"value\"}"), // restrict output to specified classes
   symptoms: z.boolean().default(false), // return disease symptom heatmaps
 });
 
