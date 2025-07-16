@@ -30,7 +30,11 @@ export const PlantDetailsSchema = z.object({
 
 // Plant identification request schema (FormData)
 export const PlantIdentificationFormDataSchema = z.object({
-  images: z.array(z.instanceof(File)).min(1, "At least one image is required"), // uploaded files
+  images: z.array(z.custom<File>()).min(1, "At least one image is required").openapi({ 
+    type: "array", 
+    items: { type: "string", format: "binary" },
+    description: "Array of image files to upload"
+  }), // uploaded files
   details: z.string().optional(), // comma-separated list: "url,common_names,gbif_id"
   classification_level: z.enum(["all", "genus", "species", "infraspecies"]).default("species"),
   classification_raw: z.boolean().default(false),

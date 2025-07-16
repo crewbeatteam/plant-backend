@@ -38,8 +38,11 @@
                 "properties": {
                   "images": {
                     "type": "array",
-                    "items": {},
-                    "minItems": 1
+                    "description": "Array of image files to upload",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
                   },
                   "details": {
                     "type": "string"
