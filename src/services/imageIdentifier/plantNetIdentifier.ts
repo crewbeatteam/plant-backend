@@ -14,10 +14,8 @@ export class PlantNetIdentifier implements ImageIdentifier {
 
   async isAvailable(): Promise<boolean> {
     try {
-      // Test API availability with a simple request
-      const response = await fetch(`${this.baseUrl}/projects`, {
-        headers: { 'Api-Key': this.apiKey }
-      });
+      // Test API availability with a simple request to v2 projects endpoint
+      const response = await fetch(`${this.baseUrl}/projects?api-key=${this.apiKey}`);
       return response.ok;
     } catch {
       return false;
