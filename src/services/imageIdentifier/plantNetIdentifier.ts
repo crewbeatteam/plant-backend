@@ -2,7 +2,7 @@ import type { ImageIdentifier, ImageIdentificationRequest, ImageIdentificationRe
 
 export class PlantNetIdentifier implements ImageIdentifier {
   private apiKey: string;
-  private baseUrl = "https://my-api.plantnet.org/v1";
+  private baseUrl = "https://my-api.plantnet.org/v2";
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -35,20 +35,25 @@ export class PlantNetIdentifier implements ImageIdentifier {
         const imageData = this.extractImageData(request.images[i]);
         const blob = new Blob([imageData], { type: 'image/jpeg' });
         formData.append('images', blob, `image${i}.jpg`);
-        formData.append('organs', 'leaf'); // PlantNet requires organ specification
+        formData.append('organs', 'auto'); // Let AI detect the organ
       }
 
       // Add optional parameters
-      if (request.classification_level) {
-        formData.append('include-related-images', request.similar_images ? 'true' : 'false');
+      if (request.similar_images) {
+        formData.append('include-related-images', 'true');
+      }
+      
+      // Limit results for better performance
+      formData.append('nb-results', '5');
+      
+      // Set language if provided
+      if (request.language) {
+        formData.append('lang', request.language);
       }
 
-      // Call PlantNet API
-      const response = await fetch(`${this.baseUrl}/identify/weurope`, {
+      // Call PlantNet API v2 - use the identify endpoint with all projects
+      const response = await fetch(`${this.baseUrl}/identify/all?api-key=${this.apiKey}`, {
         method: 'POST',
-        headers: {
-          'Api-Key': this.apiKey,
-        },
         body: formData
       });
 
@@ -102,47 +107,52 @@ export class PlantNetIdentifier implements ImageIdentifier {
   }
 
   private transformResponse(plantNetResult: any, processingTime: number): ImageIdentificationResult {
-    // PlantNet response structure:
+    // PlantNet v2 response structure:
     // {
-    //   "species": [
+    //   "query": {},
+    //   "predictedOrgans": [],
+    //   "bestMatch": "Ajuga genevensis L.",
+    //   "results": [
     //     {
-    //       "score": 0.85,
+    //       "score": 0.90734,
     //       "species": {
-    //         "scientificNameWithoutAuthor": "Ficus lyrata",
-    //         "scientificNameAuthorship": "Warb.",
-    //         "genus": { "scientificNameWithoutAuthor": "Ficus" },
-    //         "family": { "scientificNameWithoutAuthor": "Moraceae" },
-    //         "commonNames": ["Fiddle Leaf Fig"]
+    //         "scientificNameWithoutAuthor": "Ajuga genevensis",
+    //         "scientificNameAuthorship": "L.",
+    //         "genus": { "scientificNameWithoutAuthor": "Ajuga" },
+    //         "family": { "scientificNameWithoutAuthor": "Lamiaceae" },
+    //         "commonNames": ["Blue bugleweed", "Blue bugle"],
+    //         "scientificName": "Ajuga genevensis L."
     //       },
-    //       "gbif": { "id": 2984084 },
-    //       "images": [...]
+    //       "gbif": { "id": "2927079" },
+    //       "powo": { "id": "444576-1" }
     //     }
     //   ]
     // }
 
-    const suggestions = plantNetResult.species?.map((species: any, index: number) => {
-      const scientificName = species.species?.scientificNameWithoutAuthor || 'Unknown';
-      const commonNames = species.species?.commonNames || [];
+    const suggestions = plantNetResult.results?.map((result: any, index: number) => {
+      const scientificName = result.species?.scientificNameWithoutAuthor || 'Unknown';
+      const commonNames = result.species?.commonNames || [];
       
       return {
-        id: species.gbif?.id || index + 1000, // Use GBIF ID or fallback
+        id: parseInt(result.gbif?.id) || index + 1000, // Use GBIF ID or fallback
         name: scientificName,
-        scientific_name: scientificName,
-        probability: species.score || 0,
+        scientific_name: result.species?.scientificName || scientificName,
+        probability: result.score || 0,
         common_names: commonNames,
         details: {
           taxonomy: {
             kingdom: "Plantae",
             phylum: "Tracheophyta",
             class: "Magnoliopsida",
-            order: species.species?.order?.scientificNameWithoutAuthor || "Unknown",
-            family: species.species?.family?.scientificNameWithoutAuthor || "Unknown",
-            genus: species.species?.genus?.scientificNameWithoutAuthor || "Unknown",
+            order: "Unknown", // Not provided in v2 response
+            family: result.species?.family?.scientificNameWithoutAuthor || "Unknown",
+            genus: result.species?.genus?.scientificNameWithoutAuthor || "Unknown",
             species: scientificName
           },
-          gbif_id: species.gbif?.id,
-          similar_images: species.images?.map((img: any, imgIndex: number) => ({
-            id: `plantnet_${species.gbif?.id || index}_${imgIndex}`,
+          gbif_id: parseInt(result.gbif?.id),
+          powo_id: result.powo?.id,
+          similar_images: result.images?.map((img: any, imgIndex: number) => ({
+            id: `plantnet_${result.gbif?.id || index}_${imgIndex}`,
             url: img.url?.o || img.url?.m || img.url?.s,
             license_name: img.licence,
             citation: `PlantNet - ${img.author || 'Unknown'}`
@@ -153,12 +163,12 @@ export class PlantNetIdentifier implements ImageIdentifier {
 
     // Calculate if this looks like a plant based on top score
     const topScore = suggestions[0]?.probability || 0;
-    const isPlant = topScore > 0.3; // PlantNet threshold for plant detection
+    const isPlant = topScore > 0.1; // PlantNet threshold for plant detection
 
     return {
       is_plant: {
         probability: isPlant ? Math.max(topScore, 0.5) : topScore,
-        threshold: 0.3,
+        threshold: 0.1,
         binary: isPlant
       },
       classification: {

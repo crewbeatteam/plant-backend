@@ -169,6 +169,8 @@ export class PlantIdentification extends OpenAPIRoute {
       const factory = ImageIdentifierFactory.fromEnvironment(c.env);
       const identifier = await factory.createBestAvailableIdentifier();
 
+      console.log("identifier: " + identifier.getName());
+
       // Transform our request format to ImageIdentifier interface
       const identificationRequest = {
         images: imageStrings,
@@ -197,6 +199,9 @@ export class PlantIdentification extends OpenAPIRoute {
         },
         result: identificationResult
       };
+
+      console.log(JSON.stringify(response, null, 4));
+
 
       // Store the request and response in database
       // Create a request object with base64 images for database storage
