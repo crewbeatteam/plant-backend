@@ -1,5 +1,5 @@
 {
-  "name": "plant-backend",
+  "name": "plant-id",
   "description": "Complete backend API template using Hono + Chanfana + D1 + Vitest.",
   "cloudflare": {
     "label": "Backend OpenAPI Template",
