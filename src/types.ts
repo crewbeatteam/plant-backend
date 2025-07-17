@@ -1,6 +1,13 @@
 import type { Context } from "hono";
 import { z } from "zod";
 
+export interface Env {
+  DB: D1Database;
+  IMAGES: R2Bucket;
+  PLANTNET_API_KEY: string;
+  OPENAI_API_KEY: string;
+}
+
 export type AppContext = Context<{ Bindings: Env }>;
 export type HandleArgs = [AppContext];
 
@@ -88,9 +95,13 @@ export const PlantIdentificationResponseSchema = z.object({
   completed: z.string(),
 });
 
-// Health assessment request schema
-export const HealthAssessmentRequestSchema = z.object({
-  images: z.array(z.string()).min(1, "At least one image is required"), // base64 encoded images
+// Health assessment request schema (FormData)
+export const HealthAssessmentFormDataSchema = z.object({
+  images: z.array(z.custom<File>()).min(1, "At least one image is required").openapi({ 
+    type: "array", 
+    items: { type: "string", format: "binary" },
+    description: "Array of image files to upload"
+  }),
   details: z.string().optional(),
   language: z.string().default("en"),
 });
@@ -189,7 +200,7 @@ export const PlantDiseaseSchema = z.object({
 // Type exports
 export type PlantIdentificationRequest = z.infer<typeof PlantIdentificationFormDataSchema>;
 export type PlantIdentificationResponse = z.infer<typeof PlantIdentificationResponseSchema>;
-export type HealthAssessmentRequest = z.infer<typeof HealthAssessmentRequestSchema>;
+export type HealthAssessmentRequest = z.infer<typeof HealthAssessmentFormDataSchema>;
 export type HealthAssessmentResponse = z.infer<typeof HealthAssessmentResponseSchema>;
 export type PlantSuggestion = z.infer<typeof PlantSuggestionSchema>;
 export type DiseaseSuggestion = z.infer<typeof DiseaseSuggestionSchema>;

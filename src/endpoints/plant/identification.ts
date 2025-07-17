@@ -3,9 +3,10 @@ import { z } from "zod";
 import type { AppContext } from "../../types";
 import { PlantIdentificationFormDataSchema, PlantIdentificationResponseSchema } from "../../types";
 import { apiKeyAuth } from "../../middleware/auth";
-import { validateImageArray } from "../../utils/image";
+import { validateFileArray } from "../../utils/fileValidation";
 import { storeIdentificationRequest } from "../../services/plantIdentification";
 import { ImageIdentifierFactory } from "../../services/imageIdentifier/factory";
+import { createImageStorage } from "../../services/imageStorage";
 
 // Helper function to parse FormData (PlantNet style with images param)
 async function parseFormData(formData: FormData) {
@@ -46,13 +47,29 @@ async function parseFormData(formData: FormData) {
   return data;
 }
 
-// Helper function to convert File to base64
-async function fileToBase64(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const uint8Array = new Uint8Array(arrayBuffer);
-  const binaryString = Array.from(uint8Array, byte => String.fromCharCode(byte)).join("");
-  const base64 = btoa(binaryString);
-  return `data:${file.type};base64,${base64}`;
+// Helper function to upload images to R2 and return image data
+async function processImages(files: File[], imageStorage: any): Promise<{ imageKeys: string[], imageUrls: string[], files: File[], imageMetadata: any[] }> {
+  const imageKeys: string[] = [];
+  const imageUrls: string[] = [];
+  const imageMetadata: any[] = [];
+  
+  for (const file of files) {
+    // Upload to R2
+    const uploadResult = await imageStorage.uploadImage(file);
+    const imageUrl = await imageStorage.getImageUrl(uploadResult.imageKey);
+    
+    imageKeys.push(uploadResult.imageKey);
+    imageUrls.push(imageUrl);
+    imageMetadata.push({
+      imageKey: uploadResult.imageKey,
+      contentHash: uploadResult.contentHash,
+      fileSize: uploadResult.fileSize,
+      contentType: uploadResult.contentType,
+      originalFilename: file.name
+    });
+  }
+  
+  return { imageKeys, imageUrls, files, imageMetadata };
 }
 
 export class PlantIdentification extends OpenAPIRoute {
@@ -156,13 +173,14 @@ export class PlantIdentification extends OpenAPIRoute {
       
       const request = validation.data;
 
-      // Convert File objects to base64 strings
-      const imageStrings = await Promise.all(
-        (request.images as File[]).map(file => fileToBase64(file))
-      );
+      // Initialize image storage service
+      const imageStorage = createImageStorage(c.env);
+      
+      // Process images: upload to R2
+      const { imageKeys, imageUrls, files, imageMetadata } = await processImages(request.images as File[], imageStorage);
 
-      // Validate images
-      const imageValidation = validateImageArray(imageStrings);
+      // Validate image files
+      const imageValidation = validateFileArray(files);
       if (!imageValidation.isValid) {
         return c.json({
           error: "Invalid images",
@@ -181,7 +199,8 @@ export class PlantIdentification extends OpenAPIRoute {
 
       // Transform our request format to ImageIdentifier interface
       const identificationRequest = {
-        images: imageStrings,
+        images: imageUrls, // Use R2 URLs instead of base64
+        files: files, // Pass original files for providers that need them
         latitude: request.latitude,
         longitude: request.longitude,
         classification_level: request.classification_level,
@@ -208,14 +227,19 @@ export class PlantIdentification extends OpenAPIRoute {
         result: identificationResult
       };
 
-      console.log(JSON.stringify(response, null, 4));
+      console.log("=== IDENTIFICATION RESPONSE SENT TO CLIENT ===");
+      console.log(JSON.stringify(response, null, 2));
 
 
       // Store the request and response in database
-      // Create a request object with base64 images for database storage
+      // Create a request object with R2 image data for database storage
       const requestForStorage = {
         ...request,
-        images: imageStrings
+        imageKeys,
+        imageUrls,
+        imageMetadata,
+        primaryImageKey: imageKeys[0] || null,
+        primaryImageUrl: imageUrls[0] || null
       };
       await storeIdentificationRequest(c.env.DB, apiKeyInfo.id, requestForStorage, response);
 

@@ -16,5 +16,11 @@
   "vars": {
     "DEFAULT_IDENTIFIER": "mock",
     "FALLBACK_IDENTIFIERS": "plantnet,openai"
-  }
+  },
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "plant-id-images"
+    }
+  ]
 }

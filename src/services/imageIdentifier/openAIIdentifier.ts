@@ -84,14 +84,12 @@ export class OpenAIIdentifier implements ImageIdentifier {
   }
 
   private formatImageForOpenAI(image: string): string {
-    // OpenAI expects data URL format
-    if (image.startsWith('data:')) {
-      return image;
-    } else if (image.startsWith('http')) {
-      return image; // URL
+    // OpenAI Vision API supports both data URLs and HTTP URLs
+    if (image.startsWith('data:') || image.startsWith('http')) {
+      return image; // Already in correct format
     } else {
-      // Assume base64, add data URL prefix
-      return `data:image/jpeg;base64,${image}`;
+      // Should not happen with R2 URLs, but fallback just in case
+      throw new Error(`Invalid image format: ${image.substring(0, 50)}...`);
     }
   }
 

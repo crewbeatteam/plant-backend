@@ -1,5 +1,6 @@
 export interface ImageIdentificationRequest {
-  images: string[]; // base64 or URLs
+  images: string[]; // R2 URLs
+  files?: File[]; // Original files for providers that need them
   latitude?: number;
   longitude?: number;
   classification_level?: 'all' | 'genus' | 'species' | 'infraspecies';

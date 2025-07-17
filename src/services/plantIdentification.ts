@@ -219,23 +219,76 @@ function generateAccessToken(requestId: number): string {
 export async function storeIdentificationRequest(
   db: D1Database,
   apiKeyId: number,
-  request: PlantIdentificationRequest,
+  request: any, // Extended to include R2 image data
   response: PlantIdentificationResponse
 ): Promise<void> {
-  // Extract numeric ID from access token for consistent storage
-  const numericId = parseInt(response.access_token.split('=')[1]);
+  // Extract numeric ID from access token
+  let numericId: number;
+  if (response.access_token.includes('=')) {
+    // Format: "token=123" (from generateAccessToken)
+    numericId = parseInt(response.access_token.split('=')[1]);
+  } else {
+    // Format: "123" (direct requestId)
+    numericId = parseInt(response.access_token);
+  }
   
+  // Validate numericId
+  if (isNaN(numericId)) {
+    throw new Error(`Invalid access token format: ${response.access_token}`);
+  }
+  
+  // Insert main identification record with R2 image data (no more base64)
   await db.prepare(`
     INSERT INTO plant_identifications 
-    (id, api_key_id, image_data, is_plant, classification_level, details, result)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    (id, api_key_id, image_key, image_url, thumbnail_url, is_plant, classification_level, details, result)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     numericId,
     apiKeyId,
-    request.images[0], // Store first image for reference
+    request.primaryImageKey || null,
+    request.primaryImageUrl || null,
+    null, // thumbnail_url - to be implemented later
     response.result.is_plant.probability,
     request.classification_level,
     request.details || null,
     JSON.stringify(response)
   ).run();
+
+  // Store image metadata and relationships if R2 data is available
+  if (request.imageKeys && request.imageUrls && request.imageMetadata) {
+    for (let i = 0; i < request.imageKeys.length; i++) {
+      const imageKey = request.imageKeys[i];
+      const imageUrl = request.imageUrls[i];
+      const metadata = request.imageMetadata[i];
+      const isPrimary = i === 0;
+
+      // Insert or update image metadata
+      await db.prepare(`
+        INSERT OR REPLACE INTO image_metadata 
+        (image_key, image_url, content_hash, content_type, file_size, original_filename, uploaded_at, access_count, last_accessed)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
+      `).bind(
+        imageKey,
+        imageUrl,
+        metadata.contentHash,
+        metadata.contentType,
+        metadata.fileSize,
+        metadata.originalFilename,
+        new Date().toISOString(),
+        new Date().toISOString()
+      ).run();
+
+      // Link image to identification
+      await db.prepare(`
+        INSERT INTO identification_images 
+        (identification_id, image_key, image_order, is_primary)
+        VALUES (?, ?, ?, ?)
+      `).bind(
+        numericId,
+        imageKey,
+        i,
+        isPrimary
+      ).run();
+    }
+  }
 }

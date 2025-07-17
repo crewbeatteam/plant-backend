@@ -26,17 +26,30 @@ export class PlantNetIdentifier implements ImageIdentifier {
     const startTime = Date.now();
 
     try {
-      // Convert base64 images to form data
+      // Use original files if available, otherwise fetch from R2 URLs
       const formData = new FormData();
       
       console.log('PlantNet: Processing', request.images.length, 'images');
       
       // Add all images first
       for (let i = 0; i < request.images.length; i++) {
-        const imageData = this.extractImageData(request.images[i]);
-        const blob = new Blob([imageData], { type: 'image/jpeg' });
+        let blob: Blob;
+        
+        if (request.files && request.files[i]) {
+          // Use original file if available
+          blob = request.files[i];
+          console.log(`PlantNet: Using original file ${i} (${blob.size} bytes)`);
+        } else {
+          // Fetch from R2 URL
+          const response = await fetch(request.images[i]);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch image from ${request.images[i]}`);
+          }
+          blob = await response.blob();
+          console.log(`PlantNet: Fetched from R2 ${i} (${blob.size} bytes)`);
+        }
+        
         formData.append('images', blob, `image${i}.jpg`);
-        console.log(`PlantNet: Added image ${i} (${imageData.length} bytes)`);
       }
       
       // Add organs for each image (must match number of images)
@@ -104,26 +117,7 @@ export class PlantNetIdentifier implements ImageIdentifier {
     }
   }
 
-  private extractImageData(imageString: string): Uint8Array {
-    // Handle both base64 and data URLs
-    let base64Data: string;
-    
-    if (imageString.startsWith('data:')) {
-      const base64Index = imageString.indexOf(',') + 1;
-      base64Data = imageString.substring(base64Index);
-    } else {
-      base64Data = imageString;
-    }
-
-    // Convert base64 to binary
-    const binaryString = atob(base64Data);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    
-    return bytes;
-  }
+  // Removed extractImageData - no longer needed as we use files/URLs directly
 
   private transformResponse(plantNetResult: any, processingTime: number): ImageIdentificationResult {
     // PlantNet v2 response structure:
