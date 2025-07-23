@@ -253,6 +253,9 @@ Search the comprehensive plant database by scientific names, common names, or sy
         }
       }
 
+      console.log("=== FINAL PLANT SEARCH RESPONSE ===");
+      console.log(JSON.stringify(searchResult, null, 2));
+      
       return c.json(searchResult);
 
     } catch (error) {

@@ -20,6 +20,10 @@ export class MockPlantSearchProvider implements PlantSearchProvider {
       const results = this.searchMockPlants(request.query, normalizedQuery, limit);
       const searchTime = Date.now() - startTime;
       
+      console.log(`Mock provider found ${results.length} results for "${request.query}"`, {
+        first_items: results.slice(0, 2)
+      });
+      
       return {
         entities: results,
         entities_trimmed: results.length >= limit,

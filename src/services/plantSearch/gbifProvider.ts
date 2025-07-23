@@ -107,6 +107,14 @@ export class GBIFPlantSearchProvider implements PlantSearchProvider {
       const data: GBIFSpeciesSearchResponse = await response.json();
       const searchTime = Date.now() - startTime;
       
+      console.log(`GBIF API returned ${data.results?.length || 0} raw results:`, {
+        count: data.count,
+        offset: data.offset,
+        limit: data.limit,
+        endOfRecords: data.endOfRecords,
+        first_items: data.results?.slice(0, 2)
+      });
+      
       // Convert GBIF species to our format
       const entities = await this.convertGBIFToEntities(data.results, request.query, normalizedQuery);
       

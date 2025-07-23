@@ -24,6 +24,7 @@ export type {
 export { LocalPlantSearchProvider } from './localProvider';
 export { PerenualPlantSearchProvider } from './perenualProvider';
 export { GBIFPlantSearchProvider } from './gbifProvider';
+export { iNaturalistPlantSearchProvider } from './inaturalistProvider';
 export { MockPlantSearchProvider } from './mockProvider';
 
 // Utilities

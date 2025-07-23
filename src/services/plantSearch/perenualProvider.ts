@@ -138,6 +138,14 @@ export class PerenualPlantSearchProvider implements PlantSearchProvider {
       const data: PerenualSpeciesResponse = await response.json();
       const searchTime = Date.now() - startTime;
       
+      console.log(`Perenual API returned ${data.data?.length || 0} raw results:`, JSON.stringify({
+        total: data.total,
+        to: data.to,
+        per_page: data.per_page,
+        current_page: data.current_page,
+        first_items: data.data?.slice(0, 2)
+      }, null, 4));
+      
       // Convert Perenual species to our format
       const entities = this.convertPerenualToEntities(data.data, request.query, normalizedQuery);
       

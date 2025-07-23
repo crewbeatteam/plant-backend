@@ -17,8 +17,8 @@
   "vars": {
     "DEFAULT_IDENTIFIER": "plantnet",
     "FALLBACK_IDENTIFIERS": "openai",
-    "DEFAULT_PLANT_SEARCH_PROVIDER": "perenual",
-    "PLANT_SEARCH_DEGRADATION_PROVIDERS": "gbif,inaturalist,openai,mock"
+    "DEFAULT_PLANT_SEARCH_PROVIDER": "gbif",
+    "PLANT_SEARCH_DEGRADATION_PROVIDERS": "inaturalist,perenual,openai,mock"
   },
   "r2_buckets": [
     {

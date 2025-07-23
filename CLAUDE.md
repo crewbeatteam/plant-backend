@@ -74,9 +74,9 @@ wrangler secret put PERENUAL_API_KEY
 
 **Plant Search Providers:**
 - **Local**: Primary provider, searches cached/stored plant data with fuzzy matching
-- **Perenual**: Default external provider, comprehensive plant database with 10,000+ species
+- **Perenual**: Comprehensive plant database with 10,000+ species and care information
 - **GBIF**: Scientific plant taxonomy database with accurate taxonomic data
-- **iNaturalist**: Biodiversity database (planned implementation)
+- **iNaturalist**: Community-driven biodiversity database with millions of plant observations and photos
 - **OpenAI**: AI-powered plant search with fuzzy matching (planned implementation)
 - **Mock**: Final fallback using built-in plant species data
 

@@ -259,10 +259,10 @@ export class PlantSearchDatabase {
     
     // Otherwise, try FTS search for fuzzy matching
     const ftsStmt = this.db.prepare(`
-      SELECT e.*, rank FROM plant_search_entities e
+      SELECT e.* FROM plant_search_entities e
       JOIN plant_search_fts fts ON e.id = fts.entity_id
-      WHERE plant_search_fts MATCH ?
-      ORDER BY rank
+      WHERE fts MATCH ?
+      ORDER BY fts.bm25(fts)
       LIMIT ?
     `);
     

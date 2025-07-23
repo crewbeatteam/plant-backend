@@ -2,6 +2,7 @@ import type { PlantSearchProvider, PlantSearchRequest, PlantSearchResult } from 
 import { LocalPlantSearchProvider } from "./localProvider";
 import { PerenualPlantSearchProvider } from "./perenualProvider";
 import { GBIFPlantSearchProvider } from "./gbifProvider";
+import { iNaturalistPlantSearchProvider } from "./inaturalistProvider";
 import { PlantSearchDatabase } from "./utils";
 
 export type PlantSearchProviderType = "local" | "perenual" | "gbif" | "inaturalist" | "openai" | "mock";
@@ -46,8 +47,7 @@ export class PlantSearchFactory {
         return new GBIFPlantSearchProvider();
         
       case "inaturalist":
-        // TODO: Implement iNaturalist provider
-        throw new Error("iNaturalist provider not yet implemented");
+        return new iNaturalistPlantSearchProvider();
         
       case "openai":
         if (!this.config.openai?.apiKey) {
