@@ -38,6 +38,7 @@ app.onError((err, c) => {
 // Setup OpenAPI registry
 const openapi = fromHono(app, {
   docs_url: "/",
+  redoc_url: "/redoc",
   schema: {
     info: {
       title: "Plant.ID v3 API",

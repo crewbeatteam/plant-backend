@@ -21,7 +21,7 @@
     "cf-typegen": "wrangler types",
     "deploy": "wrangler deploy",
     "dev": "pnpm seedLocalDb && wrangler dev",
-    "predeploy": "wrangler d1 migrations apply DB --remote", 
+    "predeploy": "wrangler d1 migrations apply DB --remote",
     "seedLocalDb": "wrangler d1 migrations apply DB --local",
     "schema": "npx chanfana",
     "test": "wrangler deploy --dry-run && npx vitest run --config tests/vitest.config.mts"
@@ -30,6 +30,7 @@
     "chanfana": "2.8.1",
     "hono": "4.8.2",
     "openai": "^5.9.0",
+    "redoc-cli": "^0.13.21",
     "zod": "3.25.67"
   },
   "devDependencies": {
