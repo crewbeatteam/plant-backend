@@ -7,7 +7,32 @@ export class CreateApiKey extends OpenAPIRoute {
   schema = {
     tags: ["API Management"],
     summary: "Create a new API key",
-    description: "Generate a new API key for accessing the Plant.ID API",
+    description: `
+Generate a new API key for accessing the Plant.ID API. Each API key provides secure access to all endpoints and includes usage tracking.
+
+## API Key Management
+
+### Key Properties
+- **Unique identifier**: Each key has a unique ID for tracking
+- **Descriptive naming**: Assign meaningful names for organization
+- **Usage tracking**: Monitor consumption per key
+- **Secure generation**: Cryptographically secure random keys
+
+### Best Practices
+- Use descriptive names (e.g., "Mobile App", "Web Dashboard", "Testing")
+- Store keys securely in environment variables
+- Never commit keys to version control
+- Rotate keys regularly for security
+- Create separate keys for different applications/environments
+
+### Security Notes
+- API keys are displayed only once during creation
+- Keys cannot be retrieved after creation (only regenerated)
+- Keep keys confidential and secure
+- Monitor usage regularly for unexpected activity
+
+**Important**: This is an admin endpoint and should be protected in production environments.
+    `.trim(),
     request: {
       body: {
         content: {
@@ -15,6 +40,29 @@ export class CreateApiKey extends OpenAPIRoute {
             schema: z.object({
               name: z.string().min(1).max(100).describe("Descriptive name for the API key"),
             }),
+            examples: {
+              mobile_app: {
+                summary: "Mobile app API key",
+                description: "Create API key for mobile application",
+                value: {
+                  name: "Mobile App Production"
+                }
+              },
+              development: {
+                summary: "Development API key",
+                description: "Create API key for development/testing",
+                value: {
+                  name: "Development Testing"
+                }
+              },
+              web_dashboard: {
+                summary: "Web dashboard API key",
+                description: "Create API key for web dashboard",
+                value: {
+                  name: "Web Dashboard v2.1"
+                }
+              }
+            }
           },
         },
       },
@@ -30,6 +78,18 @@ export class CreateApiKey extends OpenAPIRoute {
               api_key: z.string(),
               created_at: z.string(),
             }),
+            examples: {
+              created_key: {
+                summary: "Successfully created API key",
+                description: "Example response when API key is created successfully",
+                value: {
+                  id: 42,
+                  name: "Mobile App Production",
+                  api_key: "sk_live_1234567890abcdef1234567890abcdef12345678",
+                  created_at: "2024-01-15T10:30:00.000Z"
+                }
+              }
+            }
           },
         },
       },

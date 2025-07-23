@@ -58,12 +58,50 @@ export class PlantHealthAssessment extends OpenAPIRoute {
   schema = {
     tags: ["Plant Health"],
     summary: "Assess plant health and detect diseases",
-    description: "Submit images for plant health assessment and disease detection using AI",
+    description: `
+Analyze plant images for health issues, diseases, and care recommendations. This endpoint detects common plant problems like pests, diseases, nutrient deficiencies, and environmental stress.
+
+## Best Practices
+
+### Image Guidelines
+- **Focus on problem areas**: Capture close-ups of affected leaves, stems, or flowers
+- **Multiple angles**: Include overall plant structure and detailed problem shots
+- **Lighting**: Use natural light or bright indoor lighting
+- **Background**: Plain backgrounds help AI focus on the plant
+
+### Common Detectable Issues
+- **Diseases**: Fungal infections, bacterial spots, viral symptoms
+- **Pests**: Aphids, spider mites, scale insects, thrips
+- **Deficiencies**: Nitrogen, phosphorus, potassium, micronutrients
+- **Environmental**: Overwatering, underwatering, light stress, temperature damage
+
+## Response Details
+Results include confidence scores, treatment recommendations, and preventive care tips.
+    `.trim(),
     request: {
       body: {
         content: {
           "multipart/form-data": {
             schema: HealthAssessmentFormDataSchema,
+            examples: {
+              basic_assessment: {
+                summary: "Basic health assessment",
+                description: "Simple health check with plant images",
+                value: {
+                  images: ["[binary image data]"],
+                  language: "en"
+                }
+              },
+              detailed_assessment: {
+                summary: "Detailed assessment with custom ID",
+                description: "Complete health assessment request",
+                value: {
+                  images: ["[binary image data]", "[binary image data]"],
+                  language: "en",
+                  custom_id: "plant_health_check_001"
+                }
+              }
+            }
           },
         },
       },
@@ -77,6 +115,100 @@ export class PlantHealthAssessment extends OpenAPIRoute {
         content: {
           "application/json": {
             schema: HealthAssessmentResponseSchema,
+            examples: {
+              healthy_plant: {
+                summary: "Healthy plant assessment",
+                description: "Example response for a healthy plant with no issues detected",
+                value: {
+                  access_token: "health_abc123",
+                  status: "COMPLETED",
+                  model_version: "1.0.0",
+                  custom_id: "plant_health_check_001",
+                  input: {
+                    language: "en"
+                  },
+                  result: {
+                    is_healthy: {
+                      probability: 0.92,
+                      binary: true,
+                      threshold: 0.5
+                    },
+                    disease: {
+                      suggestions: []
+                    },
+                    health_assessment: {
+                      overall_health_score: 9.2,
+                      recommendations: [
+                        "Continue current care routine",
+                        "Monitor for any changes in leaf color",
+                        "Ensure consistent watering schedule"
+                      ]
+                    }
+                  }
+                }
+              },
+              diseased_plant: {
+                summary: "Plant with disease detected",
+                description: "Example response when plant disease is detected",
+                value: {
+                  access_token: "health_xyz789",
+                  status: "COMPLETED",
+                  model_version: "1.0.0",
+                  custom_id: null,
+                  input: {
+                    language: "en"
+                  },
+                  result: {
+                    is_healthy: {
+                      probability: 0.23,
+                      binary: false,
+                      threshold: 0.5
+                    },
+                    disease: {
+                      suggestions: [
+                        {
+                          id: "powdery_mildew",
+                          name: "Powdery Mildew",
+                          probability: 0.84,
+                          similar_images: [
+                            {
+                              id: "ref_001",
+                              url: "https://example.com/powdery_mildew_ref.jpg",
+                              similarity: 0.87
+                            }
+                          ],
+                          details: {
+                            common_names: ["White Mold", "Powdery Mildew"],
+                            description: "Fungal infection causing white powdery spots on leaves",
+                            treatment: {
+                              immediate: [
+                                "Remove affected leaves immediately",
+                                "Improve air circulation around plant",
+                                "Apply fungicidal spray"
+                              ],
+                              preventive: [
+                                "Avoid overhead watering",
+                                "Maintain proper spacing between plants",
+                                "Ensure good ventilation"
+                              ]
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    health_assessment: {
+                      overall_health_score: 3.4,
+                      recommendations: [
+                        "Treat fungal infection immediately",
+                        "Isolate plant from other plants",
+                        "Monitor closely for spread",
+                        "Adjust watering and humidity levels"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
           },
         },
       },

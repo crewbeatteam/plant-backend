@@ -76,12 +76,59 @@ export class PlantIdentification extends OpenAPIRoute {
   schema = {
     tags: ["Plant Identification"],
     summary: "Identify plant species from images",
-    description: "Submit images for plant species identification using AI",
+    description: `
+Submit images for plant species identification using AI. This endpoint accepts up to 5 images and returns detailed identification results including confidence scores, similar images, and taxonomic information.
+
+## Usage Examples
+
+### Basic Identification
+Upload 1-3 clear images of the plant from different angles (leaves, flowers, overall structure) for best results.
+
+### Advanced Parameters
+- Use \`latitude\` and \`longitude\` for location-based filtering
+- Set \`classification_level\` to "species" for detailed identification or "genus" for broader classification  
+- Enable \`similar_images\` to get visual references in the response
+- Specify \`language\` for localized common names
+
+## Image Requirements
+- **Formats**: JPEG, PNG, WebP
+- **Size**: 100KB - 10MB per image
+- **Resolution**: Minimum 300x300px, recommended 1024x1024px
+- **Quality**: Clear, well-lit images with good focus
+- **Content**: Plant should occupy at least 50% of the image
+
+## Response Time
+Typical response time is 2-10 seconds depending on the selected AI provider and image complexity.
+    `.trim(),
     request: {
       body: {
         content: {
           "multipart/form-data": {
             schema: PlantIdentificationFormDataSchema,
+            examples: {
+              basic_request: {
+                summary: "Basic plant identification",
+                description: "Simple identification request with just images",
+                value: {
+                  images: ["[binary image data]"],
+                  classification_level: "species",
+                  language: "en"
+                }
+              },
+              detailed_request: {
+                summary: "Detailed identification with location",
+                description: "Complete request with location data and similar images",
+                value: {
+                  images: ["[binary image data]", "[binary image data]"],
+                  latitude: 37.7749,
+                  longitude: -122.4194,
+                  classification_level: "species",
+                  similar_images: true,
+                  language: "en",
+                  custom_id: "my_plant_001"
+                }
+              }
+            }
           },
         },
       },
@@ -95,6 +142,108 @@ export class PlantIdentification extends OpenAPIRoute {
         content: {
           "application/json": {
             schema: PlantIdentificationResponseSchema,
+            examples: {
+              successful_identification: {
+                summary: "Successful plant identification",
+                description: "Example response with high-confidence species identification",
+                value: {
+                  access_token: "abc123def456",
+                  status: "COMPLETED",
+                  model_version: "1.0.0",
+                  custom_id: "my_plant_001",
+                  input: {
+                    latitude: 37.7749,
+                    longitude: -122.4194,
+                    similar_images: true,
+                    classification_level: "species",
+                    language: "en"
+                  },
+                  result: {
+                    is_plant: {
+                      probability: 0.95,
+                      binary: true,
+                      threshold: 0.5
+                    },
+                    classification: {
+                      suggestions: [
+                        {
+                          id: "monstera_deliciosa",
+                          name: "Monstera deliciosa",
+                          probability: 0.89,
+                          confirmed: false,
+                          similar_images: [
+                            {
+                              id: "img_001",
+                              url: "https://example.com/similar1.jpg",
+                              similarity: 0.92
+                            }
+                          ],
+                          details: {
+                            common_names: ["Swiss Cheese Plant", "Split-leaf Philodendron"],
+                            taxonomy: {
+                              kingdom: "Plantae",
+                              phylum: "Tracheophyta",
+                              class: "Liliopsida",
+                              order: "Alismatales",
+                              family: "Araceae",
+                              genus: "Monstera",
+                              species: "M. deliciosa"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              low_confidence: {
+                summary: "Low confidence identification",
+                description: "Example response when AI has lower confidence",
+                value: {
+                  access_token: "xyz789abc123",
+                  status: "COMPLETED",
+                  model_version: "1.0.0",
+                  custom_id: null,
+                  input: {
+                    latitude: null,
+                    longitude: null,
+                    similar_images: false,
+                    classification_level: "species",
+                    language: "en"
+                  },
+                  result: {
+                    is_plant: {
+                      probability: 0.87,
+                      binary: true,
+                      threshold: 0.5
+                    },
+                    classification: {
+                      suggestions: [
+                        {
+                          id: "unknown_fern",
+                          name: "Unknown Fern Species",
+                          probability: 0.34,
+                          confirmed: false,
+                          similar_images: [],
+                          details: {
+                            common_names: ["Fern"],
+                            taxonomy: {
+                              kingdom: "Plantae",
+                              phylum: "Pteridophyta",
+                              class: "Polypodiopsida",
+                              order: "Polypodiales",
+                              family: "Unknown",
+                              genus: "Unknown",
+                              species: "Unknown"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
           },
         },
       },

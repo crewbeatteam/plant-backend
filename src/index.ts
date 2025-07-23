@@ -43,8 +43,71 @@ const openapi = fromHono(app, {
     info: {
       title: "Plant.ID v3 API",
       version: "3.0.0",
-      description: "AI-powered plant identification and health assessment API compatible with Plant.ID v3.",
+      description: `
+# Plant.ID v3 API
+
+AI-powered plant identification and health assessment API compatible with Plant.ID v3.
+
+## Features
+
+- **Plant Identification**: Upload images to identify plant species using multiple AI providers
+- **Health Assessment**: Analyze plant images for diseases and health issues
+- **Knowledge Base**: Search plant database and get detailed plant information
+- **API Key Management**: Secure access with API key authentication
+- **Usage Tracking**: Monitor API usage and limits
+
+## Authentication
+
+All endpoints require an \`Api-Key\` header for authentication. Create an API key using the \`/admin/api-keys\` endpoint.
+
+## Supported Providers
+
+- **Mock**: Built-in plant database for testing
+- **PlantNet**: Real plant identification using PlantNet API
+- **OpenAI**: AI-powered identification using GPT-4 Vision
+
+## Rate Limits
+
+API usage is tracked and limited based on your subscription plan. Check your usage with the \`/v3/usage_info\` endpoint.
+      `.trim(),
+      contact: {
+        name: "Plant.ID API Support",
+        url: "https://github.com/your-repo/plant-id",
+        email: "support@plant-id.example.com"
+      },
+      license: {
+        name: "MIT",
+        url: "https://opensource.org/licenses/MIT"
+      }
     },
+    servers: [
+      {
+        url: "https://your-api.example.com",
+        description: "Production server"
+      },
+      {
+        url: "http://localhost:8787",
+        description: "Development server"
+      }
+    ],
+    tags: [
+      {
+        name: "Plant Identification",
+        description: "AI-powered plant species identification from images"
+      },
+      {
+        name: "Plant Health",
+        description: "Plant health assessment and disease detection"
+      },
+      {
+        name: "Plant Knowledge Base",
+        description: "Search and retrieve detailed plant information"
+      },
+      {
+        name: "API Management",
+        description: "API key management and usage tracking"
+      }
+    ]
   },
 });
 

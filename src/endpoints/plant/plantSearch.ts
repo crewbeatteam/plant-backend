@@ -22,7 +22,30 @@ export class PlantSearch extends OpenAPIRoute {
   schema = {
     tags: ["Plant Knowledge Base"],
     summary: "Search plant knowledge base",
-    description: "Search plants by scientific names, common names, or synonyms. This endpoint is in beta testing.",
+    description: `
+Search the comprehensive plant database by scientific names, common names, or synonyms. This endpoint helps you find plants and get access tokens for detailed information.
+
+## Search Features
+
+### Search Types
+- **Scientific names**: Search by binomial nomenclature (e.g., "Monstera deliciosa")
+- **Common names**: Search by popular names (e.g., "Swiss cheese plant")
+- **Partial matches**: Find plants with partial name matches
+- **Synonyms**: Historical and alternative scientific names
+
+### Search Tips
+- Use specific terms for better results
+- Try both scientific and common names
+- Use partial words to find broader matches
+- Check different languages for regional names
+
+### Beta Features
+- Advanced filtering by plant characteristics
+- Location-based search results
+- Seasonal availability information
+
+**Note**: This endpoint is currently in beta testing. Some features may change in future versions.
+    `.trim(),
     request: {
       query: z.object({
         q: z.string().min(1).describe("Search query for plant names"),
@@ -40,6 +63,70 @@ export class PlantSearch extends OpenAPIRoute {
         content: {
           "application/json": {
             schema: PlantSearchResponseSchema,
+            examples: {
+              successful_search: {
+                summary: "Successful plant search",
+                description: "Example response with multiple matching plants",
+                value: {
+                  entities: [
+                    {
+                      matched_in: "Monstera deliciosa",
+                      matched_in_type: "entity_name",
+                      access_token: "cGxhbnRfMV8xNzI5NzY4ODIw",
+                      match_position: 0,
+                      match_length: 8,
+                      entity_name: "Monstera deliciosa",
+                      thumbnail: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+                    },
+                    {
+                      matched_in: "Swiss Cheese Plant",
+                      matched_in_type: "common_name",
+                      access_token: "cGxhbnRfMV8xNzI5NzY4ODIx",
+                      match_position: 6,
+                      match_length: 8,
+                      entity_name: "Monstera deliciosa"
+                    }
+                  ],
+                  entities_trimmed: false,
+                  limit: 10
+                }
+              },
+              no_results: {
+                summary: "No search results",
+                description: "Example response when no plants match the search query",
+                value: {
+                  entities: [],
+                  entities_trimmed: false,
+                  limit: 10
+                }
+              },
+              limited_results: {
+                summary: "Limited search results",
+                description: "Example response when results are trimmed due to limit",
+                value: {
+                  entities: [
+                    {
+                      matched_in: "Fern",
+                      matched_in_type: "common_name",
+                      access_token: "cGxhbnRfM18xNzI5NzY4ODMw",
+                      match_position: 0,
+                      match_length: 4,
+                      entity_name: "Pteridium aquilinum"
+                    },
+                    {
+                      matched_in: "Boston Fern",
+                      matched_in_type: "common_name",
+                      access_token: "cGxhbnRfNF8xNzI5NzY4ODMx",
+                      match_position: 7,
+                      match_length: 4,
+                      entity_name: "Nephrolepis exaltata"
+                    }
+                  ],
+                  entities_trimmed: true,
+                  limit: 2
+                }
+              }
+            }
           },
         },
       },
