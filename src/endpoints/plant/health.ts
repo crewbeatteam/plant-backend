@@ -250,7 +250,7 @@ Results include confidence scores, treatment recommendations, and preventive car
     try {
       // Apply authentication middleware
       const authResponse = await apiKeyAuth(c, async () => {
-        return null; // Continue to handler
+        // Continue to handler
       });
       
       // If authentication middleware returned a response, return it
@@ -324,7 +324,7 @@ Results include confidence scores, treatment recommendations, and preventive car
         primaryImageKey: imageKeys[0] || null,
         primaryImageUrl: imageUrls[0] || null
       };
-      await storeHealthAssessment(c.env.DB, apiKeyInfo.id, requestForStorage, response);
+      await storeHealthAssessment(c.env.DB, apiKeyInfo.id as number, requestForStorage, response);
 
       return c.json(response, 200);
 

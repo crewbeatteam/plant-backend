@@ -13,6 +13,7 @@ export interface PlantSuggestion {
   name: string;
   scientific_name: string;
   probability: number;
+  confirmed?: boolean;
   common_names?: string[];
   details?: {
     taxonomy?: {

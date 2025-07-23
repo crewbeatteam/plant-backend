@@ -2,7 +2,7 @@ import { OpenAPIRoute } from "chanfana";
 import { z } from "zod";
 import type { AppContext } from "../../types";
 import { apiKeyAuth } from "../../middleware/auth";
-import { MOCK_PLANT_SPECIES } from "../../services/plantIdentification";
+import { PlantSearchFactory } from "../../services/plantSearch";
 
 const PlantSearchResponseSchema = z.object({
   entities: z.array(z.object({
@@ -12,10 +12,20 @@ const PlantSearchResponseSchema = z.object({
     match_position: z.number(),
     match_length: z.number(),
     entity_name: z.string(),
+    common_names: z.array(z.string()).optional(),
+    synonyms: z.array(z.string()).optional(),
     thumbnail: z.string().optional(),
+    confidence: z.number().optional(),
+    provider_source: z.string(),
+    provider_id: z.string().optional(),
   })),
   entities_trimmed: z.boolean(),
   limit: z.number(),
+  provider: z.string(),
+  cached: z.boolean(),
+  search_time_ms: z.number(),
+  query_normalized: z.string(),
+  total_found: z.number().optional(),
 });
 
 export class PlantSearch extends OpenAPIRoute {
@@ -49,9 +59,19 @@ Search the comprehensive plant database by scientific names, common names, or sy
     request: {
       query: z.object({
         q: z.string().min(1).describe("Search query for plant names"),
-        limit: z.string().optional().transform(val => val ? parseInt(val) : 10).pipe(z.number().min(1).max(20)).describe("Maximum results (1-20, default 10)"),
-        language: z.string().default("en").describe("Language code for common names (ISO 639-1)"),
-        thumbnails: z.string().optional().transform(val => val === "true").describe("Include 64x64 base64 thumbnails"),
+        limit: z.string().optional().transform(val => val ? parseInt(val) : 10).pipe(z.number().min(1).max(100)).describe("Maximum results (1-100, default 10)"),
+        language: z.string().default("en").describe("Language code for common names (ISO 639-1)"), 
+        thumbnails: z.string().optional().transform(val => val === "true").describe("Include thumbnails in results"),
+        // New filter parameters
+        indoor: z.string().optional().transform(val => val === "true").describe("Filter for indoor plants"),
+        outdoor: z.string().optional().transform(val => val === "true").describe("Filter for outdoor plants"),
+        edible: z.string().optional().transform(val => val === "true").describe("Filter for edible plants"),
+        poisonous: z.string().optional().transform(val => val === "true").describe("Filter for poisonous plants"),
+        difficulty: z.enum(["easy", "medium", "hard"]).optional().describe("Care difficulty level"),
+        care_level: z.enum(["low", "medium", "high"]).optional().describe("Care level required"),
+        sunlight: z.enum(["low", "medium", "high", "full"]).optional().describe("Sunlight requirements"),
+        watering: z.enum(["low", "medium", "high"]).optional().describe("Watering requirements"),
+        cycle: z.enum(["annual", "biennial", "perennial"]).optional().describe("Plant life cycle"),
       }),
       headers: z.object({
         "Api-Key": z.string().describe("API key for authentication"),
@@ -157,7 +177,7 @@ Search the comprehensive plant database by scientific names, common names, or sy
     try {
       // Apply authentication middleware
       const authResponse = await apiKeyAuth(c, async () => {
-        return null;
+        // Continue to handler
       });
       
       if (authResponse) {
@@ -179,14 +199,61 @@ Search the comprehensive plant database by scientific names, common names, or sy
         return c.json({ error: "Query parameter 'q' is required" }, 400);
       }
 
-      // Search in mock plant data
-      const results = this.searchPlants(query, limit, thumbnails);
+      // Parse filter parameters
+      const filters: any = {};
+      if (c.req.query("indoor") !== undefined) filters.indoor = c.req.query("indoor") === "true";
+      if (c.req.query("outdoor") !== undefined) filters.outdoor = c.req.query("outdoor") === "true";
+      if (c.req.query("edible") !== undefined) filters.edible = c.req.query("edible") === "true";
+      if (c.req.query("poisonous") !== undefined) filters.poisonous = c.req.query("poisonous") === "true";
+      if (c.req.query("difficulty")) filters.difficulty = c.req.query("difficulty");
+      if (c.req.query("care_level")) filters.care_level = c.req.query("care_level");
+      if (c.req.query("sunlight")) filters.sunlight = c.req.query("sunlight");
+      if (c.req.query("watering")) filters.watering = c.req.query("watering");
+      if (c.req.query("cycle")) filters.cycle = c.req.query("cycle");
 
-      return c.json({
-        entities: results,
-        entities_trimmed: results.length >= limit,
-        limit: limit,
+      // Create plant search factory from environment
+      console.log("=== PLANT SEARCH DEBUG ===");
+      console.log("Environment variables:", {
+        DEFAULT_PLANT_SEARCH_PROVIDER: c.env.DEFAULT_PLANT_SEARCH_PROVIDER,
+        PLANT_SEARCH_DEGRADATION_PROVIDERS: c.env.PLANT_SEARCH_DEGRADATION_PROVIDERS,
+        PERENUAL_API_KEY: c.env.PERENUAL_API_KEY ? "***SET***" : "NOT SET"
       });
+      
+      const factory = PlantSearchFactory.fromEnvironment(c.env, c.env.DB);
+      
+      // Validate factory configuration
+      const configValidation = factory.validateConfig();
+      console.log("Factory configuration validation:", configValidation);
+      
+      // Prepare search request
+      const searchRequest = {
+        query: query,
+        limit: limit,
+        language: language,
+        filters: Object.keys(filters).length > 0 ? filters : undefined
+      };
+      
+      console.log("Search request:", searchRequest);
+
+      // Perform search using provider factory
+      console.log("Starting plant search with factory...");
+      const searchResult = await factory.search(searchRequest);
+      console.log("Search completed, result:", {
+        provider: searchResult.provider,
+        entities_count: searchResult.entities.length,
+        search_time: searchResult.search_time_ms
+      });
+      
+      // Add thumbnails if requested (backward compatibility)
+      if (thumbnails) {
+        for (const entity of searchResult.entities) {
+          if (!entity.thumbnail) {
+            entity.thumbnail = this.generateThumbnail();
+          }
+        }
+      }
+
+      return c.json(searchResult);
 
     } catch (error) {
       console.error("Plant search error:", error);
@@ -194,51 +261,6 @@ Search the comprehensive plant database by scientific names, common names, or sy
     }
   }
 
-  private searchPlants(query: string, limit: number, includeThumbnails: boolean) {
-    const queryLower = query.toLowerCase();
-    const results: any[] = [];
-
-    for (const plant of MOCK_PLANT_SPECIES) {
-      // Search in scientific name
-      const scientificMatch = plant.name.toLowerCase().indexOf(queryLower);
-      if (scientificMatch !== -1) {
-        results.push({
-          matched_in: plant.name,
-          matched_in_type: "entity_name",
-          access_token: this.generateAccessToken(plant.id),
-          match_position: scientificMatch,
-          match_length: query.length,
-          entity_name: plant.name,
-          ...(includeThumbnails && { thumbnail: this.generateThumbnail() }),
-        });
-      }
-
-      // Search in common names
-      for (const commonName of plant.common_names) {
-        const commonMatch = commonName.toLowerCase().indexOf(queryLower);
-        if (commonMatch !== -1) {
-          results.push({
-            matched_in: commonName,
-            matched_in_type: "common_name",
-            access_token: this.generateAccessToken(plant.id),
-            match_position: commonMatch,
-            match_length: query.length,
-            entity_name: plant.name,
-            ...(includeThumbnails && { thumbnail: this.generateThumbnail() }),
-          });
-        }
-      }
-
-      if (results.length >= limit) break;
-    }
-
-    return results.slice(0, limit);
-  }
-
-  private generateAccessToken(plantId: number): string {
-    // Generate a mock access token (in real implementation, this would be a proper token)
-    return Buffer.from(`plant_${plantId}_${Date.now()}`).toString('base64').slice(0, 32);
-  }
 
   private generateThumbnail(): string {
     // Return a minimal 1x1 pixel base64 image as mock thumbnail

@@ -285,7 +285,7 @@ Typical response time is 2-10 seconds depending on the selected AI provider and 
     try {
       // Apply authentication middleware
       const authResponse = await apiKeyAuth(c, async () => {
-        return null; // Continue to handler
+        // Continue to handler
       });
       
       // If authentication middleware returned a response, return it
@@ -365,7 +365,7 @@ Typical response time is 2-10 seconds depending on the selected AI provider and 
         access_token: requestId.toString(),
         status: "COMPLETED",
         model_version: "1.0.0",
-        custom_id: request.custom_id || null,
+        custom_id: request.custom_id || undefined,
         input: {
           latitude: request.latitude || null,
           longitude: request.longitude || null,
@@ -373,7 +373,16 @@ Typical response time is 2-10 seconds depending on the selected AI provider and 
           classification_level: request.classification_level || "species",
           language: request.language || "en"
         },
-        result: identificationResult
+        result: {
+          ...identificationResult,
+          classification: {
+            ...identificationResult.classification,
+            suggestions: identificationResult.classification.suggestions.map(suggestion => ({
+              ...suggestion,
+              confirmed: suggestion.confirmed ?? false // Ensure confirmed field is always present
+            }))
+          }
+        }
       };
 
       console.log("=== IDENTIFICATION RESPONSE SENT TO CLIENT ===");
@@ -390,7 +399,7 @@ Typical response time is 2-10 seconds depending on the selected AI provider and 
         primaryImageKey: imageKeys[0] || null,
         primaryImageUrl: imageUrls[0] || null
       };
-      await storeIdentificationRequest(c.env.DB, apiKeyInfo.id, requestForStorage, response);
+      await storeIdentificationRequest(c.env.DB, apiKeyInfo.id as number, requestForStorage, response);
 
       return c.json(response, 200);
 

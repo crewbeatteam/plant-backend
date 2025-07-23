@@ -6,9 +6,23 @@ export interface Env {
   IMAGES: R2Bucket;
   PLANTNET_API_KEY: string;
   OPENAI_API_KEY: string;
+  PERENUAL_API_KEY?: string;
+  DEFAULT_IDENTIFIER: string;
+  FALLBACK_IDENTIFIERS: string;
+  DEFAULT_PLANT_SEARCH_PROVIDER: "perenual";
+  PLANT_SEARCH_DEGRADATION_PROVIDERS: "gbif,inaturalist,openai,mock";
 }
 
-export type AppContext = Context<{ Bindings: Env }>;
+export type AppContext = Context<{ 
+  Bindings: Env,
+  Variables: {
+    apiKey: {
+      id: unknown;
+      name: unknown;
+      is_active: unknown;
+    }
+  }
+}>;
 export type HandleArgs = [AppContext];
 
 // Plant.ID API Schema Definitions
@@ -62,8 +76,10 @@ export const PlantIdentificationFormDataSchema = z.object({
 export const PlantSuggestionSchema = z.object({
   id: z.number(),
   name: z.string(),
+  scientific_name: z.string().optional(),
   probability: z.number().min(0).max(1),
-  confirmed: z.boolean().default(false),
+  confirmed: z.boolean().optional().default(false),
+  common_names: z.array(z.string()).optional(),
   similar_images: z.array(z.object({
     id: z.string(),
     url: z.string(),
@@ -71,13 +87,19 @@ export const PlantSuggestionSchema = z.object({
     license_url: z.string().optional(),
     citation: z.string().optional(),
   })).optional(),
-  details: PlantDetailsSchema.optional(),
+  details: z.union([
+    PlantDetailsSchema,
+    z.object({
+      reasoning: z.string(),
+    }),
+    z.any()
+  ]).optional(),
 });
 
 // Plant identification response schema
 export const PlantIdentificationResponseSchema = z.object({
   access_token: z.string(),
-  custom_id: z.number().optional(),
+  custom_id: z.union([z.number(), z.string()]).optional(),
   result: z.object({
     is_plant: z.object({
       probability: z.number().min(0).max(1),
@@ -89,10 +111,18 @@ export const PlantIdentificationResponseSchema = z.object({
     }),
   }),
   status: z.string(),
-  sla_compliant_client: z.boolean(),
-  sla_compliant_system: z.boolean(),
-  created: z.string(),
-  completed: z.string(),
+  sla_compliant_client: z.boolean().optional(),
+  sla_compliant_system: z.boolean().optional(),
+  created: z.string().optional(),
+  completed: z.string().optional(),
+  model_version: z.string().optional(),
+  input: z.object({
+    latitude: z.number().nullable().optional(),
+    longitude: z.number().nullable().optional(),
+    similar_images: z.boolean().optional(),
+    classification_level: z.string().optional(),
+    language: z.string().optional(),
+  }).optional(),
 });
 
 // Health assessment request schema (FormData)
@@ -104,6 +134,7 @@ export const HealthAssessmentFormDataSchema = z.object({
   }),
   details: z.string().optional(),
   language: z.string().default("en"),
+  custom_id: z.union([z.number(), z.string()]).optional(),
 });
 
 // Disease suggestion
@@ -137,7 +168,7 @@ export const DiseaseSuggestionSchema = z.object({
 // Health assessment response schema
 export const HealthAssessmentResponseSchema = z.object({
   access_token: z.string(),
-  custom_id: z.number().optional(),
+  custom_id: z.union([z.number(), z.string()]).optional(),
   result: z.object({
     is_healthy: z.object({
       probability: z.number().min(0).max(1),
@@ -155,12 +186,20 @@ export const HealthAssessmentResponseSchema = z.object({
         })),
       }).optional(),
     }),
+    health_assessment: z.object({
+      overall_health_score: z.number(),
+      recommendations: z.array(z.string()),
+    }).optional(),
   }),
   status: z.string(),
-  sla_compliant_client: z.boolean(),
-  sla_compliant_system: z.boolean(),
-  created: z.string(),
-  completed: z.string(),
+  sla_compliant_client: z.boolean().optional(),
+  sla_compliant_system: z.boolean().optional(),
+  created: z.string().optional(),
+  completed: z.string().optional(),
+  model_version: z.string().optional(),
+  input: z.object({
+    language: z.string(),
+  }).optional(),
 });
 
 // API Key schema for authentication

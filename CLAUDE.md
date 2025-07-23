@@ -53,20 +53,32 @@ This template demonstrates both Chanfana D1 AutoEndpoints and standard endpoint 
 - Environment variables configured in `wrangler.jsonc`:
   - `DEFAULT_IDENTIFIER` - Primary plant identification provider (mock/plantnet/openai)
   - `FALLBACK_IDENTIFIERS` - Comma-separated fallback providers
+  - `DEFAULT_PLANT_SEARCH_PROVIDER` - Primary plant search provider (perenual/gbif/mock)
+  - `PLANT_SEARCH_DEGRADATION_PROVIDERS` - Comma-separated degradation providers
 - Secrets (set via wrangler CLI, not in config files):
-  - `PLANTNET_API_KEY` - PlantNet API key
-  - `OPENAI_API_KEY` - OpenAI API key
+  - `PLANTNET_API_KEY` - PlantNet API key for plant identification
+  - `OPENAI_API_KEY` - OpenAI API key for AI-powered identification and search
+  - `PERENUAL_API_KEY` - Perenual API key for comprehensive plant search data
 
 **Setting Production Secrets:**
 ```bash
 wrangler secret put PLANTNET_API_KEY
 wrangler secret put OPENAI_API_KEY
+wrangler secret put PERENUAL_API_KEY
 ```
 
 **Plant Identification Providers:**
 - **Mock**: Default fallback, uses built-in plant database
 - **PlantNet**: Real plant identification using PlantNet API
 - **OpenAI**: AI-powered identification using GPT-4 Vision
+
+**Plant Search Providers:**
+- **Local**: Primary provider, searches cached/stored plant data with fuzzy matching
+- **Perenual**: Default external provider, comprehensive plant database with 10,000+ species
+- **GBIF**: Scientific plant taxonomy database with accurate taxonomic data
+- **iNaturalist**: Biodiversity database (planned implementation)
+- **OpenAI**: AI-powered plant search with fuzzy matching (planned implementation)
+- **Mock**: Final fallback using built-in plant species data
 
 ## Commit Message Guidelines
 

@@ -1,7 +1,16 @@
 import { createMiddleware } from "hono/factory";
 import type { AppContext } from "../types";
 
-export const apiKeyAuth = createMiddleware<{ Bindings: Env }>(async (c, next) => {
+export const apiKeyAuth = createMiddleware<{ 
+  Bindings: Env,
+  Variables: {
+    apiKey: {
+      id: unknown;
+      name: unknown;
+      is_active: unknown;
+    }
+  }
+}>(async (c, next) => {
   const apiKey = c.req.header("Api-Key");
   
   if (!apiKey) {

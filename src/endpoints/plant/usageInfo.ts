@@ -178,7 +178,7 @@ Retrieve comprehensive usage statistics, credit limits, and remaining credits fo
     try {
       // Apply authentication middleware
       const authResponse = await apiKeyAuth(c, async () => {
-        return null; // Continue to handler
+        // Continue to handler
       });
       
       if (authResponse) {
@@ -191,7 +191,7 @@ Retrieve comprehensive usage statistics, credit limits, and remaining credits fo
       }
 
       // Get usage statistics from database
-      const usageStats = await this.getUsageStats(c.env.DB, apiKeyInfo.id);
+      const usageStats = await this.getUsageStats(c.env.DB, apiKeyInfo.id as number);
       
       const creditLimits = {
         day: null,
@@ -236,7 +236,7 @@ Retrieve comprehensive usage statistics, credit limits, and remaining credits fo
       "SELECT COUNT(*) as count FROM plant_health_assessments WHERE api_key_id = ?"
     ).bind(apiKeyId).first();
 
-    const totalUsed = (identificationCount?.count || 0) + (healthCount?.count || 0);
+    const totalUsed = ((identificationCount as any)?.count || 0) + ((healthCount as any)?.count || 0);
 
     // For now, return simple mock stats
     // In a real implementation, you'd track daily, weekly, monthly usage

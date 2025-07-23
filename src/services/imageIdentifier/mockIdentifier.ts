@@ -31,6 +31,7 @@ export class MockIdentifier implements ImageIdentifier {
         name: randomSpecies.name,
         scientific_name: randomSpecies.name,
         probability: 0.85 + Math.random() * 0.1, // 85-95%
+        confirmed: false,
         common_names: randomSpecies.common_names,
         details: this.buildPlantDetails(randomSpecies, requestedDetails),
         ...(request.similar_images && { similar_images: this.generateSimilarImages(randomSpecies.id) })
@@ -40,6 +41,7 @@ export class MockIdentifier implements ImageIdentifier {
         name: secondChoice.name,
         scientific_name: secondChoice.name,
         probability: 0.05 + Math.random() * 0.15, // 5-20%
+        confirmed: false,
         common_names: secondChoice.common_names,
         details: this.buildPlantDetails(secondChoice, requestedDetails),
         ...(request.similar_images && { similar_images: this.generateSimilarImages(secondChoice.id) })

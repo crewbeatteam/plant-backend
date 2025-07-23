@@ -151,6 +151,7 @@ export class PlantNetIdentifier implements ImageIdentifier {
         name: scientificName,
         scientific_name: result.species?.scientificName || scientificName,
         probability: result.score || 0,
+        confirmed: false,
         common_names: commonNames,
         details: {
           taxonomy: {

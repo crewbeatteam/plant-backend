@@ -73,7 +73,7 @@ export class PlantDetail extends OpenAPIRoute {
     try {
       // Apply authentication middleware
       const authResponse = await apiKeyAuth(c, async () => {
-        return null;
+        // Continue to handler
       });
       
       if (authResponse) {

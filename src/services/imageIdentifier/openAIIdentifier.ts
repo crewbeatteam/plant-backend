@@ -148,6 +148,7 @@ Analyze the image(s) now:`;
         name: suggestion.scientific_name || 'Unknown',
         scientific_name: suggestion.scientific_name || 'Unknown',
         probability: suggestion.confidence || 0,
+        confirmed: false, // OpenAI results are not confirmed by default
         common_names: suggestion.common_names || [],
         details: {
           taxonomy: suggestion.taxonomy || {
@@ -197,10 +198,11 @@ Analyze the image(s) now:`;
             name: name,
             scientific_name: name,
             probability: Math.max(0.7 - (index * 0.2), 0.1),
+            confirmed: false,
             common_names: [],
             details: {
               reasoning: "Extracted from AI analysis text"
-            }
+            } as any
           }))
         },
         processing_time_ms: processingTime,
