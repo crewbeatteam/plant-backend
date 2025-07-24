@@ -414,10 +414,69 @@ export class GBIFPlantSearchProvider implements PlantSearchProvider {
         return null;
       }
       
-      // Convert to our standard format with full details
-      const entities = await this.convertGBIFToEntities([species], species.scientificName, species.scientificName.toLowerCase());
+      console.log(`GBIF species details retrieved:`, {
+        scientificName: species.scientificName,
+        taxonomicStatus: species.taxonomicStatus,
+        rank: species.rank
+      });
       
-      return entities[0] || null;
+      // Fetch additional details in parallel
+      const [vernacularNames, synonyms] = await Promise.all([
+        this.getVernacularNames(species.key),
+        this.getSynonyms(species.key)
+      ]);
+      
+      console.log(`GBIF additional data:`, {
+        vernacular_count: vernacularNames.length,
+        synonym_count: synonyms.length
+      });
+      
+      // Build comprehensive entity with all available data
+      const entity: PlantSearchEntity = {
+        matched_in: species.scientificName,
+        matched_in_type: 'entity_name',
+        access_token: accessToken,
+        match_position: 0,
+        match_length: species.scientificName.length,
+        entity_name: species.scientificName,
+        common_names: vernacularNames,
+        synonyms: synonyms,
+        thumbnail: undefined, // GBIF doesn't provide images
+        confidence: 1.0,
+        provider_source: 'gbif',
+        provider_id: species.key.toString(),
+        details: {
+          taxonomy: {
+            kingdom: species.kingdom || 'Unknown',
+            phylum: species.phylum || 'Unknown',
+            class: species.class || 'Unknown',
+            order: species.order || 'Unknown',
+            family: species.family || 'Unknown',
+            genus: species.genus || 'Unknown',
+            species: species.species || species.scientificName
+          },
+          characteristics: {
+            rank: species.rank,
+            taxonomic_status: species.taxonomicStatus,
+            nomenclatural_status: species.nomenclaturalStatus?.join(', '),
+            authorship: species.authorship,
+            canonical_name: species.canonicalName,
+            name_type: species.nameType,
+            origin: species.origin,
+            num_descendants: species.numDescendants
+          },
+          external_ids: {
+            gbif_id: species.key,
+            nub_key: species.nubKey,
+            name_key: species.nameKey,
+            accepted_key: species.acceptedKey,
+            parent_key: species.parentKey,
+            dataset_key: species.datasetKey
+          }
+        }
+      };
+      
+      return entity;
       
     } catch (error) {
       console.error('GBIF getDetails error:', error);

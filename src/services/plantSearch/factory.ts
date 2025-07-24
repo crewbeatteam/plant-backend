@@ -308,14 +308,15 @@ export class PlantSearchFactory {
     
     console.log("Token info:", tokenInfo);
     
+    // TODO: Temporarily disable local provider for plant details retrieval
     // First try to get from local database
-    console.log("Trying local provider first...");
-    const localResult = await this.tryProviderDetails(this.localProvider, accessToken);
-    
-    if (localResult) {
-      console.log("Local provider returned detailed results");
-      return localResult;
-    }
+    // console.log("Trying local provider first...");
+    // const localResult = await this.tryProviderDetails(this.localProvider, accessToken);
+    // 
+    // if (localResult) {
+    //   console.log("Local provider returned detailed results");
+    //   return localResult;
+    // }
     
     // If not in local database, try the original provider
     console.log(`Trying original provider: ${tokenInfo.provider}`);

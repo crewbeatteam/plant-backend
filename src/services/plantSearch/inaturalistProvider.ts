@@ -504,10 +504,72 @@ export class iNaturalistPlantSearchProvider implements PlantSearchProvider {
         return null;
       }
       
-      // Convert to our standard format with full details
-      const entities = await this.convertiNaturalistToEntities([taxon], taxon.name, taxon.name.toLowerCase());
+      console.log(`iNaturalist taxon details retrieved:`, {
+        name: taxon.name,
+        rank: taxon.rank,
+        observations_count: taxon.observations_count,
+        has_photos: !!taxon.default_photo
+      });
       
-      return entities[0] || null;
+      // Build comprehensive entity with enhanced details
+      const commonNames: string[] = [];
+      if (taxon.preferred_common_name) {
+        commonNames.push(taxon.preferred_common_name);
+      }
+      if (taxon.english_common_name && taxon.english_common_name !== taxon.preferred_common_name) {
+        commonNames.push(taxon.english_common_name);
+      }
+      
+      const taxonomy = this.extractTaxonomy(taxon);
+      const images = this.extractImages(taxon);
+      
+      const entity: PlantSearchEntity = {
+        matched_in: taxon.name,
+        matched_in_type: 'entity_name',
+        access_token: accessToken,
+        match_position: 0,
+        match_length: taxon.name.length,
+        entity_name: taxon.name,
+        common_names: [...new Set(commonNames)].filter(Boolean),
+        synonyms: [], // iNaturalist doesn't provide synonyms in basic search
+        thumbnail: taxon.default_photo?.medium_url || undefined,
+        confidence: 1.0,
+        provider_source: 'inaturalist',
+        provider_id: taxon.id.toString(),
+        details: {
+          taxonomy: taxonomy,
+          observations_count: taxon.observations_count,
+          characteristics: {
+            rank: taxon.rank,
+            rank_level: taxon.rank_level,
+            is_active: taxon.is_active,
+            iconic_taxon_id: taxon.iconic_taxon_id || undefined,
+            complete_species_count: taxon.complete_species_count || undefined,
+            atlas_id: taxon.atlas_id || undefined
+          },
+          wikipedia: taxon.wikipedia_url ? {
+            title: taxon.name,
+            url: taxon.wikipedia_url
+          } : undefined,
+          images: images,
+          external_ids: {
+            inaturalist_id: taxon.id,
+            parent_id: taxon.parent?.id
+          },
+          conservation: taxon.conservation_status ? {
+            status: taxon.conservation_status,
+            statuses: taxon.conservation_statuses
+          } : undefined,
+          ancestry: {
+            ancestor_ids: taxon.ancestor_ids,
+            ancestors: taxon.ancestors,
+            parent: taxon.parent,
+            children_count: taxon.children?.length || 0
+          }
+        }
+      };
+      
+      return entity;
       
     } catch (error) {
       console.error('iNaturalist getDetails error:', error);

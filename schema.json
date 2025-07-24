@@ -3,8 +3,45 @@
   "info": {
     "title": "Plant.ID v3 API",
     "version": "3.0.0",
-    "description": "AI-powered plant identification and health assessment API compatible with Plant.ID v3."
+    "description": "# Plant.ID v3 API\n\nAI-powered plant identification and health assessment API compatible with Plant.ID v3.\n\n## Features\n\n- **Plant Identification**: Upload images to identify plant species using multiple AI providers\n- **Health Assessment**: Analyze plant images for diseases and health issues\n- **Knowledge Base**: Comprehensive plant search with multi-provider biodiversity data\n- **API Key Management**: Secure access with API key authentication\n- **Usage Tracking**: Monitor API usage and limits\n\n## Enhanced Knowledge Base\n\nOur plant knowledge base integrates multiple authoritative biodiversity databases:\n\n- **GBIF**: Global Biodiversity Information Facility - comprehensive taxonomic data\n- **iNaturalist**: Community-driven observations with high-quality photos\n- **Perenual**: Plant care guides and growing characteristics\n- **Local Database**: Cached data for fast retrieval\n\n## Authentication\n\nAll endpoints require an `Api-Key` header for authentication. Create an API key using the `/admin/api-keys` endpoint.\n\n## Plant Identification Providers\n\n- **Mock**: Built-in plant database for testing\n- **PlantNet**: Real plant identification using PlantNet API\n- **OpenAI**: AI-powered identification using GPT-4 Vision\n\n## Rate Limits\n\nAPI usage is tracked and limited based on your subscription plan. Check your usage with the `/v3/usage_info` endpoint.",
+    "contact": {
+      "name": "Plant.ID API Support",
+      "url": "https://github.com/your-repo/plant-id",
+      "email": "support@plant-id.example.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
   },
+  "servers": [
+    {
+      "url": "https://your-api.example.com",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:8787",
+      "description": "Development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Plant Identification",
+      "description": "AI-powered plant species identification from images"
+    },
+    {
+      "name": "Plant Health",
+      "description": "Plant health assessment and disease detection"
+    },
+    {
+      "name": "Plant Knowledge Base",
+      "description": "Search and retrieve detailed plant information"
+    },
+    {
+      "name": "API Management",
+      "description": "API key management and usage tracking"
+    }
+  ],
   "components": {
     "schemas": {},
     "parameters": {}
@@ -16,7 +53,7 @@
           "Plant Identification"
         ],
         "summary": "Identify plant species from images",
-        "description": "Submit images for plant species identification using AI",
+        "description": "Submit images for plant species identification using AI. This endpoint accepts up to 5 images and returns detailed identification results including confidence scores, similar images, and taxonomic information.\n\n## Usage Examples\n\n### Basic Identification\nUpload 1-3 clear images of the plant from different angles (leaves, flowers, overall structure) for best results.\n\n### Advanced Parameters\n- Use `latitude` and `longitude` for location-based filtering\n- Set `classification_level` to \"species\" for detailed identification or \"genus\" for broader classification  \n- Enable `similar_images` to get visual references in the response\n- Specify `language` for localized common names\n\n## Image Requirements\n- **Formats**: JPEG, PNG, WebP\n- **Size**: 100KB - 10MB per image\n- **Resolution**: Minimum 300x300px, recommended 1024x1024px\n- **Quality**: Clear, well-lit images with good focus\n- **Content**: Plant should occupy at least 50% of the image\n\n## Response Time\nTypical response time is 2-10 seconds depending on the selected AI provider and image complexity.",
         "operationId": "post_PlantIdentification",
         "parameters": [
           {
@@ -109,6 +146,35 @@
                 "required": [
                   "images"
                 ]
+              },
+              "examples": {
+                "basic_request": {
+                  "summary": "Basic plant identification",
+                  "description": "Simple identification request with just images",
+                  "value": {
+                    "images": [
+                      "[binary image data]"
+                    ],
+                    "classification_level": "species",
+                    "language": "en"
+                  }
+                },
+                "detailed_request": {
+                  "summary": "Detailed identification with location",
+                  "description": "Complete request with location data and similar images",
+                  "value": {
+                    "images": [
+                      "[binary image data]",
+                      "[binary image data]"
+                    ],
+                    "latitude": 37.7749,
+                    "longitude": -122.4194,
+                    "classification_level": "species",
+                    "similar_images": true,
+                    "language": "en",
+                    "custom_id": "my_plant_001"
+                  }
+                }
               }
             }
           }
@@ -125,7 +191,14 @@
                       "type": "string"
                     },
                     "custom_id": {
-                      "type": "number"
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
                     },
                     "result": {
                       "type": "object",
@@ -167,6 +240,9 @@
                                   "name": {
                                     "type": "string"
                                   },
+                                  "scientific_name": {
+                                    "type": "string"
+                                  },
                                   "probability": {
                                     "type": "number",
                                     "minimum": 0,
@@ -175,6 +251,12 @@
                                   "confirmed": {
                                     "type": "boolean",
                                     "default": false
+                                  },
+                                  "common_names": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
                                   },
                                   "similar_images": {
                                     "type": "array",
@@ -204,77 +286,96 @@
                                     }
                                   },
                                   "details": {
-                                    "type": "object",
-                                    "properties": {
-                                      "url": {
-                                        "type": "string"
-                                      },
-                                      "common_names": {
-                                        "type": "array",
-                                        "items": {
-                                          "type": "string"
-                                        }
-                                      },
-                                      "gbif_id": {
-                                        "type": "number"
-                                      },
-                                      "inaturalist_id": {
-                                        "type": "number"
-                                      },
-                                      "wikipedia": {
+                                    "anyOf": [
+                                      {
                                         "type": "object",
                                         "properties": {
-                                          "title": {
-                                            "type": "string"
-                                          },
                                           "url": {
                                             "type": "string"
                                           },
-                                          "image": {
-                                            "type": "string"
+                                          "common_names": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "gbif_id": {
+                                            "type": "number"
+                                          },
+                                          "inaturalist_id": {
+                                            "type": "number"
+                                          },
+                                          "wikipedia": {
+                                            "type": "object",
+                                            "properties": {
+                                              "title": {
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "type": "string"
+                                              },
+                                              "image": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "title",
+                                              "url"
+                                            ]
+                                          },
+                                          "taxonomy": {
+                                            "type": "object",
+                                            "properties": {
+                                              "kingdom": {
+                                                "type": "string"
+                                              },
+                                              "phylum": {
+                                                "type": "string"
+                                              },
+                                              "class": {
+                                                "type": "string"
+                                              },
+                                              "order": {
+                                                "type": "string"
+                                              },
+                                              "family": {
+                                                "type": "string"
+                                              },
+                                              "genus": {
+                                                "type": "string"
+                                              },
+                                              "species": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "kingdom",
+                                              "phylum",
+                                              "class",
+                                              "order",
+                                              "family",
+                                              "genus",
+                                              "species"
+                                            ]
                                           }
-                                        },
-                                        "required": [
-                                          "title",
-                                          "url"
-                                        ]
+                                        }
                                       },
-                                      "taxonomy": {
+                                      {
                                         "type": "object",
                                         "properties": {
-                                          "kingdom": {
-                                            "type": "string"
-                                          },
-                                          "phylum": {
-                                            "type": "string"
-                                          },
-                                          "class": {
-                                            "type": "string"
-                                          },
-                                          "order": {
-                                            "type": "string"
-                                          },
-                                          "family": {
-                                            "type": "string"
-                                          },
-                                          "genus": {
-                                            "type": "string"
-                                          },
-                                          "species": {
+                                          "reasoning": {
                                             "type": "string"
                                           }
                                         },
                                         "required": [
-                                          "kingdom",
-                                          "phylum",
-                                          "class",
-                                          "order",
-                                          "family",
-                                          "genus",
-                                          "species"
+                                          "reasoning"
                                         ]
+                                      },
+                                      {},
+                                      {
+                                        "type": "null"
                                       }
-                                    }
+                                    ]
                                   }
                                 },
                                 "required": [
@@ -309,17 +410,149 @@
                     },
                     "completed": {
                       "type": "string"
+                    },
+                    "model_version": {
+                      "type": "string"
+                    },
+                    "input": {
+                      "type": "object",
+                      "properties": {
+                        "latitude": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "longitude": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "similar_images": {
+                          "type": "boolean"
+                        },
+                        "classification_level": {
+                          "type": "string"
+                        },
+                        "language": {
+                          "type": "string"
+                        }
+                      }
                     }
                   },
                   "required": [
                     "access_token",
                     "result",
-                    "status",
-                    "sla_compliant_client",
-                    "sla_compliant_system",
-                    "created",
-                    "completed"
+                    "status"
                   ]
+                },
+                "examples": {
+                  "successful_identification": {
+                    "summary": "Successful plant identification",
+                    "description": "Example response with high-confidence species identification",
+                    "value": {
+                      "access_token": "abc123def456",
+                      "status": "COMPLETED",
+                      "model_version": "1.0.0",
+                      "custom_id": "my_plant_001",
+                      "input": {
+                        "latitude": 37.7749,
+                        "longitude": -122.4194,
+                        "similar_images": true,
+                        "classification_level": "species",
+                        "language": "en"
+                      },
+                      "result": {
+                        "is_plant": {
+                          "probability": 0.95,
+                          "binary": true,
+                          "threshold": 0.5
+                        },
+                        "classification": {
+                          "suggestions": [
+                            {
+                              "id": "monstera_deliciosa",
+                              "name": "Monstera deliciosa",
+                              "probability": 0.89,
+                              "confirmed": false,
+                              "similar_images": [
+                                {
+                                  "id": "img_001",
+                                  "url": "https://example.com/similar1.jpg",
+                                  "similarity": 0.92
+                                }
+                              ],
+                              "details": {
+                                "common_names": [
+                                  "Swiss Cheese Plant",
+                                  "Split-leaf Philodendron"
+                                ],
+                                "taxonomy": {
+                                  "kingdom": "Plantae",
+                                  "phylum": "Tracheophyta",
+                                  "class": "Liliopsida",
+                                  "order": "Alismatales",
+                                  "family": "Araceae",
+                                  "genus": "Monstera",
+                                  "species": "M. deliciosa"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "low_confidence": {
+                    "summary": "Low confidence identification",
+                    "description": "Example response when AI has lower confidence",
+                    "value": {
+                      "access_token": "xyz789abc123",
+                      "status": "COMPLETED",
+                      "model_version": "1.0.0",
+                      "custom_id": null,
+                      "input": {
+                        "latitude": null,
+                        "longitude": null,
+                        "similar_images": false,
+                        "classification_level": "species",
+                        "language": "en"
+                      },
+                      "result": {
+                        "is_plant": {
+                          "probability": 0.87,
+                          "binary": true,
+                          "threshold": 0.5
+                        },
+                        "classification": {
+                          "suggestions": [
+                            {
+                              "id": "unknown_fern",
+                              "name": "Unknown Fern Species",
+                              "probability": 0.34,
+                              "confirmed": false,
+                              "similar_images": [],
+                              "details": {
+                                "common_names": [
+                                  "Fern"
+                                ],
+                                "taxonomy": {
+                                  "kingdom": "Plantae",
+                                  "phylum": "Pteridophyta",
+                                  "class": "Polypodiopsida",
+                                  "order": "Polypodiales",
+                                  "family": "Unknown",
+                                  "genus": "Unknown",
+                                  "species": "Unknown"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -393,7 +626,7 @@
           "Plant Health"
         ],
         "summary": "Assess plant health and detect diseases",
-        "description": "Submit images for plant health assessment and disease detection using AI",
+        "description": "Analyze plant images for health issues, diseases, and care recommendations. This endpoint detects common plant problems like pests, diseases, nutrient deficiencies, and environmental stress.\n\n## Best Practices\n\n### Image Guidelines\n- **Focus on problem areas**: Capture close-ups of affected leaves, stems, or flowers\n- **Multiple angles**: Include overall plant structure and detailed problem shots\n- **Lighting**: Use natural light or bright indoor lighting\n- **Background**: Plain backgrounds help AI focus on the plant\n\n### Common Detectable Issues\n- **Diseases**: Fungal infections, bacterial spots, viral symptoms\n- **Pests**: Aphids, spider mites, scale insects, thrips\n- **Deficiencies**: Nitrogen, phosphorus, potassium, micronutrients\n- **Environmental**: Overwatering, underwatering, light stress, temperature damage\n\n## Response Details\nResults include confidence scores, treatment recommendations, and preventive care tips.",
         "operationId": "post_PlantHealthAssessment",
         "parameters": [
           {
@@ -409,16 +642,17 @@
         ],
         "requestBody": {
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
                 "type": "object",
                 "properties": {
                   "images": {
                     "type": "array",
+                    "description": "Array of image files to upload",
                     "items": {
-                      "type": "string"
-                    },
-                    "minItems": 1
+                      "type": "string",
+                      "format": "binary"
+                    }
                   },
                   "details": {
                     "type": "string"
@@ -426,11 +660,45 @@
                   "language": {
                     "type": "string",
                     "default": "en"
+                  },
+                  "custom_id": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
                   }
                 },
                 "required": [
                   "images"
                 ]
+              },
+              "examples": {
+                "basic_assessment": {
+                  "summary": "Basic health assessment",
+                  "description": "Simple health check with plant images",
+                  "value": {
+                    "images": [
+                      "[binary image data]"
+                    ],
+                    "language": "en"
+                  }
+                },
+                "detailed_assessment": {
+                  "summary": "Detailed assessment with custom ID",
+                  "description": "Complete health assessment request",
+                  "value": {
+                    "images": [
+                      "[binary image data]",
+                      "[binary image data]"
+                    ],
+                    "language": "en",
+                    "custom_id": "plant_health_check_001"
+                  }
+                }
               }
             }
           }
@@ -447,7 +715,14 @@
                       "type": "string"
                     },
                     "custom_id": {
-                      "type": "number"
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
                     },
                     "result": {
                       "type": "object",
@@ -622,6 +897,24 @@
                           "required": [
                             "suggestions"
                           ]
+                        },
+                        "health_assessment": {
+                          "type": "object",
+                          "properties": {
+                            "overall_health_score": {
+                              "type": "number"
+                            },
+                            "recommendations": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "required": [
+                            "overall_health_score",
+                            "recommendations"
+                          ]
                         }
                       },
                       "required": [
@@ -643,17 +936,124 @@
                     },
                     "completed": {
                       "type": "string"
+                    },
+                    "model_version": {
+                      "type": "string"
+                    },
+                    "input": {
+                      "type": "object",
+                      "properties": {
+                        "language": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "language"
+                      ]
                     }
                   },
                   "required": [
                     "access_token",
                     "result",
-                    "status",
-                    "sla_compliant_client",
-                    "sla_compliant_system",
-                    "created",
-                    "completed"
+                    "status"
                   ]
+                },
+                "examples": {
+                  "healthy_plant": {
+                    "summary": "Healthy plant assessment",
+                    "description": "Example response for a healthy plant with no issues detected",
+                    "value": {
+                      "access_token": "health_abc123",
+                      "status": "COMPLETED",
+                      "model_version": "1.0.0",
+                      "custom_id": "plant_health_check_001",
+                      "input": {
+                        "language": "en"
+                      },
+                      "result": {
+                        "is_healthy": {
+                          "probability": 0.92,
+                          "binary": true,
+                          "threshold": 0.5
+                        },
+                        "disease": {
+                          "suggestions": []
+                        },
+                        "health_assessment": {
+                          "overall_health_score": 9.2,
+                          "recommendations": [
+                            "Continue current care routine",
+                            "Monitor for any changes in leaf color",
+                            "Ensure consistent watering schedule"
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "diseased_plant": {
+                    "summary": "Plant with disease detected",
+                    "description": "Example response when plant disease is detected",
+                    "value": {
+                      "access_token": "health_xyz789",
+                      "status": "COMPLETED",
+                      "model_version": "1.0.0",
+                      "custom_id": null,
+                      "input": {
+                        "language": "en"
+                      },
+                      "result": {
+                        "is_healthy": {
+                          "probability": 0.23,
+                          "binary": false,
+                          "threshold": 0.5
+                        },
+                        "disease": {
+                          "suggestions": [
+                            {
+                              "id": "powdery_mildew",
+                              "name": "Powdery Mildew",
+                              "probability": 0.84,
+                              "similar_images": [
+                                {
+                                  "id": "ref_001",
+                                  "url": "https://example.com/powdery_mildew_ref.jpg",
+                                  "similarity": 0.87
+                                }
+                              ],
+                              "details": {
+                                "common_names": [
+                                  "White Mold",
+                                  "Powdery Mildew"
+                                ],
+                                "description": "Fungal infection causing white powdery spots on leaves",
+                                "treatment": {
+                                  "immediate": [
+                                    "Remove affected leaves immediately",
+                                    "Improve air circulation around plant",
+                                    "Apply fungicidal spray"
+                                  ],
+                                  "preventive": [
+                                    "Avoid overhead watering",
+                                    "Maintain proper spacing between plants",
+                                    "Ensure good ventilation"
+                                  ]
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "health_assessment": {
+                          "overall_health_score": 3.4,
+                          "recommendations": [
+                            "Treat fungal infection immediately",
+                            "Isolate plant from other plants",
+                            "Monitor closely for spread",
+                            "Adjust watering and humidity levels"
+                          ]
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -727,7 +1127,7 @@
           "API Management"
         ],
         "summary": "Get API key usage information",
-        "description": "Retrieve status, limits, usage statistics, and remaining credits for your API key",
+        "description": "Retrieve comprehensive usage statistics, credit limits, and remaining credits for your API key. This endpoint helps you monitor your API consumption and plan usage accordingly.\n\n## Usage Tracking\n\n### Credit System\n- **Plant Identification**: 1 credit per request\n- **Health Assessment**: 1 credit per request  \n- **Plant Search**: 0.1 credits per request\n- **Plant Details**: 0.5 credits per request\n\n### Billing Periods\n- **Day**: Rolling 24-hour period from first API call\n- **Week**: Rolling 7-day period  \n- **Month**: Rolling 30-day period\n- **Total**: Lifetime usage since API key creation\n\n## Response Fields\n\n- `active`: Whether your API key is currently active\n- `credit_limits`: Maximum credits allowed per time period\n- `used`: Credits consumed in each time period\n- `remaining`: Credits remaining in each time period\n- `can_use_credits`: Whether you can make more API calls",
         "operationId": "get_UsageInfo",
         "parameters": [
           {
@@ -871,6 +1271,95 @@
                     "can_use_credits",
                     "remaining"
                   ]
+                },
+                "examples": {
+                  "active_account": {
+                    "summary": "Active account with usage",
+                    "description": "Example response for an active API key with moderate usage",
+                    "value": {
+                      "active": true,
+                      "credit_limits": {
+                        "day": null,
+                        "week": null,
+                        "month": null,
+                        "total": 1000
+                      },
+                      "used": {
+                        "day": 5,
+                        "week": 23,
+                        "month": 145,
+                        "total": 347
+                      },
+                      "can_use_credits": {
+                        "value": true,
+                        "reason": null
+                      },
+                      "remaining": {
+                        "day": null,
+                        "week": null,
+                        "month": null,
+                        "total": 653
+                      }
+                    }
+                  },
+                  "near_limit": {
+                    "summary": "Account nearing credit limit",
+                    "description": "Example response when approaching credit limit",
+                    "value": {
+                      "active": true,
+                      "credit_limits": {
+                        "day": 50,
+                        "week": 200,
+                        "month": 500,
+                        "total": 1000
+                      },
+                      "used": {
+                        "day": 48,
+                        "week": 195,
+                        "month": 487,
+                        "total": 987
+                      },
+                      "can_use_credits": {
+                        "value": true,
+                        "reason": null
+                      },
+                      "remaining": {
+                        "day": 2,
+                        "week": 5,
+                        "month": 13,
+                        "total": 13
+                      }
+                    }
+                  },
+                  "limit_exceeded": {
+                    "summary": "Credit limit exceeded",
+                    "description": "Example response when credit limit has been reached",
+                    "value": {
+                      "active": true,
+                      "credit_limits": {
+                        "day": null,
+                        "week": null,
+                        "month": null,
+                        "total": 1000
+                      },
+                      "used": {
+                        "day": 15,
+                        "week": 87,
+                        "month": 432,
+                        "total": 1000
+                      },
+                      "can_use_credits": {
+                        "value": false,
+                        "reason": "Credit limit reached"
+                      },
+                      "remaining": {
+                        "day": null,
+                        "week": null,
+                        "month": null,
+                        "total": 0
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -902,7 +1391,7 @@
           "Plant Knowledge Base"
         ],
         "summary": "Search plant knowledge base",
-        "description": "Search plants by scientific names, common names, or synonyms. This endpoint is in beta testing.",
+        "description": "Search the comprehensive plant database by scientific names, common names, or synonyms. This endpoint helps you find plants and get access tokens for detailed information.\n\n## Search Features\n\n### Search Types\n- **Scientific names**: Search by binomial nomenclature (e.g., \"Monstera deliciosa\")\n- **Common names**: Search by popular names (e.g., \"Swiss cheese plant\")\n- **Partial matches**: Find plants with partial name matches\n- **Synonyms**: Historical and alternative scientific names\n\n### Search Tips\n- Use specific terms for better results\n- Try both scientific and common names\n- Use partial words to find broader matches\n- Check different languages for regional names\n\n### Beta Features\n- Advanced filtering by plant characteristics\n- Location-based search results\n- Seasonal availability information\n\n**Note**: This endpoint is currently in beta testing. Some features may change in future versions.",
         "operationId": "get_PlantSearch",
         "parameters": [
           {
@@ -919,10 +1408,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "Maximum results (1-20, default 10)"
+              "description": "Maximum results (1-100, default 10)"
             },
             "required": false,
-            "description": "Maximum results (1-20, default 10)",
+            "description": "Maximum results (1-100, default 10)",
             "name": "limit",
             "in": "query"
           },
@@ -940,11 +1429,127 @@
           {
             "schema": {
               "type": "string",
-              "description": "Include 64x64 base64 thumbnails"
+              "description": "Include thumbnails in results"
             },
             "required": false,
-            "description": "Include 64x64 base64 thumbnails",
+            "description": "Include thumbnails in results",
             "name": "thumbnails",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter for indoor plants"
+            },
+            "required": false,
+            "description": "Filter for indoor plants",
+            "name": "indoor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter for outdoor plants"
+            },
+            "required": false,
+            "description": "Filter for outdoor plants",
+            "name": "outdoor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter for edible plants"
+            },
+            "required": false,
+            "description": "Filter for edible plants",
+            "name": "edible",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter for poisonous plants"
+            },
+            "required": false,
+            "description": "Filter for poisonous plants",
+            "name": "poisonous",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "easy",
+                "medium",
+                "hard"
+              ],
+              "description": "Care difficulty level"
+            },
+            "required": false,
+            "description": "Care difficulty level",
+            "name": "difficulty",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ],
+              "description": "Care level required"
+            },
+            "required": false,
+            "description": "Care level required",
+            "name": "care_level",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high",
+                "full"
+              ],
+              "description": "Sunlight requirements"
+            },
+            "required": false,
+            "description": "Sunlight requirements",
+            "name": "sunlight",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ],
+              "description": "Watering requirements"
+            },
+            "required": false,
+            "description": "Watering requirements",
+            "name": "watering",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "annual",
+                "biennial",
+                "perennial"
+              ],
+              "description": "Plant life cycle"
+            },
+            "required": false,
+            "description": "Plant life cycle",
+            "name": "cycle",
             "in": "query"
           },
           {
@@ -994,7 +1599,28 @@
                           "entity_name": {
                             "type": "string"
                           },
+                          "common_names": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "synonyms": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "thumbnail": {
+                            "type": "string"
+                          },
+                          "confidence": {
+                            "type": "number"
+                          },
+                          "provider_source": {
+                            "type": "string"
+                          },
+                          "provider_id": {
                             "type": "string"
                           }
                         },
@@ -1004,7 +1630,8 @@
                           "access_token",
                           "match_position",
                           "match_length",
-                          "entity_name"
+                          "entity_name",
+                          "provider_source"
                         ]
                       }
                     },
@@ -1013,13 +1640,96 @@
                     },
                     "limit": {
                       "type": "number"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "cached": {
+                      "type": "boolean"
+                    },
+                    "search_time_ms": {
+                      "type": "number"
+                    },
+                    "query_normalized": {
+                      "type": "string"
+                    },
+                    "total_found": {
+                      "type": "number"
                     }
                   },
                   "required": [
                     "entities",
                     "entities_trimmed",
-                    "limit"
+                    "limit",
+                    "provider",
+                    "cached",
+                    "search_time_ms",
+                    "query_normalized"
                   ]
+                },
+                "examples": {
+                  "successful_search": {
+                    "summary": "Successful plant search",
+                    "description": "Example response with multiple matching plants",
+                    "value": {
+                      "entities": [
+                        {
+                          "matched_in": "Monstera deliciosa",
+                          "matched_in_type": "entity_name",
+                          "access_token": "cGxhbnRfMV8xNzI5NzY4ODIw",
+                          "match_position": 0,
+                          "match_length": 8,
+                          "entity_name": "Monstera deliciosa",
+                          "thumbnail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+                        },
+                        {
+                          "matched_in": "Swiss Cheese Plant",
+                          "matched_in_type": "common_name",
+                          "access_token": "cGxhbnRfMV8xNzI5NzY4ODIx",
+                          "match_position": 6,
+                          "match_length": 8,
+                          "entity_name": "Monstera deliciosa"
+                        }
+                      ],
+                      "entities_trimmed": false,
+                      "limit": 10
+                    }
+                  },
+                  "no_results": {
+                    "summary": "No search results",
+                    "description": "Example response when no plants match the search query",
+                    "value": {
+                      "entities": [],
+                      "entities_trimmed": false,
+                      "limit": 10
+                    }
+                  },
+                  "limited_results": {
+                    "summary": "Limited search results",
+                    "description": "Example response when results are trimmed due to limit",
+                    "value": {
+                      "entities": [
+                        {
+                          "matched_in": "Fern",
+                          "matched_in_type": "common_name",
+                          "access_token": "cGxhbnRfM18xNzI5NzY4ODMw",
+                          "match_position": 0,
+                          "match_length": 4,
+                          "entity_name": "Pteridium aquilinum"
+                        },
+                        {
+                          "matched_in": "Boston Fern",
+                          "matched_in_type": "common_name",
+                          "access_token": "cGxhbnRfNF8xNzI5NzY4ODMx",
+                          "match_position": 7,
+                          "match_length": 4,
+                          "entity_name": "Nephrolepis exaltata"
+                        }
+                      ],
+                      "entities_trimmed": true,
+                      "limit": 2
+                    }
+                  }
                 }
               }
             }
@@ -1069,39 +1779,18 @@
           "Plant Knowledge Base"
         ],
         "summary": "Get plant details",
-        "description": "Get detailed information about a plant using access token from search. Costs 0.5 credits per call.",
+        "description": "Get comprehensive information about a specific plant using an access token from plant search results.\n\n## How it works\n1. First search for plants using `/v3/kb/plants/name_search`\n2. Get the `access_token` from search results\n3. Use this endpoint to retrieve detailed information\n\n## Data Sources\nThe system uses multiple biodiversity databases with graceful degradation:\n- **GBIF (Primary)**: Scientific taxonomy, vernacular names, synonyms, nomenclatural status\n- **iNaturalist**: Community photos, observations, conservation status, ancestry data\n- **Perenual**: Care guides, plant characteristics, growing information\n- **Local Database**: Cached comprehensive data from all providers\n- **Mock**: Fallback plant database\n\n## Comprehensive Response Data\nReturns extensive plant information including:\n\n### **Taxonomic Information**\n- Complete taxonomic hierarchy (kingdom → species)\n- Scientific nomenclature details (authorship, canonical names)\n- Taxonomic and nomenclatural status\n- All vernacular names and synonyms\n\n### **Biological Data**\n- Observation counts and community engagement metrics\n- Conservation status and assessments\n- Ancestry data and phylogenetic relationships\n- External database cross-references (GBIF, iNaturalist, Perenual)\n\n### **Care & Characteristics**\n- Growing requirements (sunlight, watering, care level)\n- Plant characteristics (indoor/outdoor, edible, difficulty)\n- Physical descriptions (mature size, growth cycle)\n- Environmental preferences\n\n### **Rich Media**\n- High-quality images with proper attribution\n- Wikipedia links with contextual information\n- Community photos from iNaturalist observations\n\n### **Provider-Specific Data**\n- **GBIF**: Taxonomic authority, nomenclatural standards\n- **iNaturalist**: Community observations, real-world photos\n- **Perenual**: Practical care information and growing guides\n\n**Note**: Access tokens are temporary and tied to specific search sessions.",
         "operationId": "get_PlantDetail",
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "description": "Access token from plant search"
+              "description": "Access token from plant search results"
             },
             "required": true,
-            "description": "Access token from plant search",
+            "description": "Access token from plant search results",
             "name": "access_token",
             "in": "path"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Comma-separated list of requested details"
-            },
-            "required": true,
-            "description": "Comma-separated list of requested details",
-            "name": "details",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "default": "en",
-              "description": "Language code (ISO 639-1)"
-            },
-            "required": false,
-            "description": "Language code (ISO 639-1)",
-            "name": "language",
-            "in": "query"
           },
           {
             "schema": {
@@ -1122,21 +1811,284 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "matched_in": {
+                      "type": "string"
+                    },
+                    "matched_in_type": {
+                      "type": "string",
+                      "enum": [
+                        "entity_name",
+                        "synonym",
+                        "common_name"
+                      ]
+                    },
                     "access_token": {
                       "type": "string"
+                    },
+                    "match_position": {
+                      "type": "number"
+                    },
+                    "match_length": {
+                      "type": "number"
                     },
                     "entity_name": {
                       "type": "string"
                     },
+                    "common_names": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "synonyms": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "thumbnail": {
+                      "type": "string"
+                    },
+                    "confidence": {
+                      "type": "number"
+                    },
+                    "provider_source": {
+                      "type": "string"
+                    },
+                    "provider_id": {
+                      "type": "string"
+                    },
                     "details": {
                       "type": "object",
-                      "additionalProperties": {}
+                      "properties": {
+                        "taxonomy": {
+                          "type": "object",
+                          "properties": {
+                            "kingdom": {
+                              "type": "string"
+                            },
+                            "phylum": {
+                              "type": "string"
+                            },
+                            "class": {
+                              "type": "string"
+                            },
+                            "order": {
+                              "type": "string"
+                            },
+                            "family": {
+                              "type": "string"
+                            },
+                            "genus": {
+                              "type": "string"
+                            },
+                            "species": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "kingdom",
+                            "phylum",
+                            "class",
+                            "order",
+                            "family",
+                            "genus",
+                            "species"
+                          ]
+                        },
+                        "characteristics": {
+                          "type": "object",
+                          "properties": {
+                            "indoor": {
+                              "type": "boolean"
+                            },
+                            "outdoor": {
+                              "type": "boolean"
+                            },
+                            "edible": {
+                              "type": "boolean"
+                            },
+                            "poisonous": {
+                              "type": "boolean"
+                            },
+                            "difficulty": {
+                              "type": "string"
+                            },
+                            "care_level": {
+                              "type": "string"
+                            },
+                            "sunlight": {
+                              "type": "string"
+                            },
+                            "watering": {
+                              "type": "string"
+                            },
+                            "cycle": {
+                              "type": "string"
+                            },
+                            "mature_height": {
+                              "type": "string"
+                            },
+                            "mature_width": {
+                              "type": "string"
+                            },
+                            "rank": {
+                              "type": "string"
+                            },
+                            "rank_level": {
+                              "type": "number"
+                            },
+                            "is_active": {
+                              "type": "boolean"
+                            },
+                            "taxonomic_status": {
+                              "type": "string"
+                            },
+                            "nomenclatural_status": {
+                              "type": "string"
+                            },
+                            "authorship": {
+                              "type": "string"
+                            },
+                            "canonical_name": {
+                              "type": "string"
+                            },
+                            "name_type": {
+                              "type": "string"
+                            },
+                            "origin": {
+                              "type": "string"
+                            },
+                            "num_descendants": {
+                              "type": "number"
+                            },
+                            "iconic_taxon_id": {
+                              "type": "number"
+                            },
+                            "complete_species_count": {
+                              "type": "number"
+                            },
+                            "atlas_id": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "observations_count": {
+                          "type": "number"
+                        },
+                        "external_ids": {
+                          "type": "object",
+                          "properties": {
+                            "gbif_id": {
+                              "type": "number"
+                            },
+                            "inaturalist_id": {
+                              "type": "number"
+                            },
+                            "perenual_id": {
+                              "type": "number"
+                            },
+                            "nub_key": {
+                              "type": "number"
+                            },
+                            "name_key": {
+                              "type": "number"
+                            },
+                            "accepted_key": {
+                              "type": "number"
+                            },
+                            "parent_key": {
+                              "type": "number"
+                            },
+                            "dataset_key": {
+                              "type": "string"
+                            },
+                            "parent_id": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "conservation": {
+                          "type": "object",
+                          "properties": {
+                            "status": {},
+                            "statuses": {
+                              "type": "array",
+                              "items": {}
+                            }
+                          }
+                        },
+                        "ancestry": {
+                          "type": "object",
+                          "properties": {
+                            "ancestor_ids": {
+                              "type": "array",
+                              "items": {
+                                "type": "number"
+                              }
+                            },
+                            "ancestors": {
+                              "type": "array",
+                              "items": {}
+                            },
+                            "parent": {},
+                            "children_count": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "images": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "url": {
+                                "type": "string"
+                              },
+                              "thumbnail": {
+                                "type": "string"
+                              },
+                              "license": {
+                                "type": "string"
+                              },
+                              "attribution": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "url"
+                            ]
+                          }
+                        },
+                        "wikipedia": {
+                          "type": "object",
+                          "properties": {
+                            "title": {
+                              "type": "string"
+                            },
+                            "url": {
+                              "type": "string"
+                            },
+                            "extract": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "title",
+                            "url"
+                          ]
+                        }
+                      }
                     }
                   },
                   "required": [
+                    "matched_in",
+                    "matched_in_type",
                     "access_token",
+                    "match_position",
+                    "match_length",
                     "entity_name",
-                    "details"
+                    "provider_source"
                   ]
                 }
               }
@@ -1205,7 +2157,7 @@
           "API Management"
         ],
         "summary": "Create a new API key",
-        "description": "Generate a new API key for accessing the Plant.ID API",
+        "description": "Generate a new API key for accessing the Plant.ID API. Each API key provides secure access to all endpoints and includes usage tracking.\n\n## API Key Management\n\n### Key Properties\n- **Unique identifier**: Each key has a unique ID for tracking\n- **Descriptive naming**: Assign meaningful names for organization\n- **Usage tracking**: Monitor consumption per key\n- **Secure generation**: Cryptographically secure random keys\n\n### Best Practices\n- Use descriptive names (e.g., \"Mobile App\", \"Web Dashboard\", \"Testing\")\n- Store keys securely in environment variables\n- Never commit keys to version control\n- Rotate keys regularly for security\n- Create separate keys for different applications/environments\n\n### Security Notes\n- API keys are displayed only once during creation\n- Keys cannot be retrieved after creation (only regenerated)\n- Keep keys confidential and secure\n- Monitor usage regularly for unexpected activity\n\n**Important**: This is an admin endpoint and should be protected in production environments.",
         "operationId": "post_CreateApiKey",
         "requestBody": {
           "content": {
@@ -1223,6 +2175,29 @@
                 "required": [
                   "name"
                 ]
+              },
+              "examples": {
+                "mobile_app": {
+                  "summary": "Mobile app API key",
+                  "description": "Create API key for mobile application",
+                  "value": {
+                    "name": "Mobile App Production"
+                  }
+                },
+                "development": {
+                  "summary": "Development API key",
+                  "description": "Create API key for development/testing",
+                  "value": {
+                    "name": "Development Testing"
+                  }
+                },
+                "web_dashboard": {
+                  "summary": "Web dashboard API key",
+                  "description": "Create API key for web dashboard",
+                  "value": {
+                    "name": "Web Dashboard v2.1"
+                  }
+                }
               }
             }
           }
@@ -1254,6 +2229,18 @@
                     "api_key",
                     "created_at"
                   ]
+                },
+                "examples": {
+                  "created_key": {
+                    "summary": "Successfully created API key",
+                    "description": "Example response when API key is created successfully",
+                    "value": {
+                      "id": 42,
+                      "name": "Mobile App Production",
+                      "api_key": "sk_live_1234567890abcdef1234567890abcdef12345678",
+                      "created_at": "2024-01-15T10:30:00.000Z"
+                    }
+                  }
                 }
               }
             }

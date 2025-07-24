@@ -60,12 +60,28 @@ export interface PlantSearchEntity {
       rank?: string;
       rank_level?: number;
       is_active?: boolean;
+      taxonomic_status?: string;
+      nomenclatural_status?: string;
+      authorship?: string;
+      canonical_name?: string;
+      name_type?: string;
+      origin?: string;
+      num_descendants?: number;
+      iconic_taxon_id?: number;
+      complete_species_count?: number;
+      atlas_id?: number;
     };
     observations_count?: number;
     external_ids?: {
       gbif_id?: number;
       inaturalist_id?: number;
       perenual_id?: number;
+      nub_key?: number;
+      name_key?: number;
+      accepted_key?: number;
+      parent_key?: number;
+      dataset_key?: string;
+      parent_id?: number;
     };
     images?: Array<{
       url: string;
@@ -77,6 +93,16 @@ export interface PlantSearchEntity {
       title: string;
       url: string;
       extract?: string;
+    };
+    conservation?: {
+      status?: any;
+      statuses?: any[];
+    };
+    ancestry?: {
+      ancestor_ids?: number[];
+      ancestors?: any[];
+      parent?: any;
+      children_count?: number;
     };
   };
 }

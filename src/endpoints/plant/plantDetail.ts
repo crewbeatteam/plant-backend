@@ -27,9 +27,54 @@ const PlantDetailResponseSchema = z.object({
       genus: z.string(),
       species: z.string(),
     }).optional(),
-    characteristics: z.record(z.any()).optional(),
+    characteristics: z.object({
+      indoor: z.boolean().optional(),
+      outdoor: z.boolean().optional(),
+      edible: z.boolean().optional(),
+      poisonous: z.boolean().optional(),
+      difficulty: z.string().optional(),
+      care_level: z.string().optional(),
+      sunlight: z.string().optional(),
+      watering: z.string().optional(),
+      cycle: z.string().optional(),
+      mature_height: z.string().optional(), 
+      mature_width: z.string().optional(),
+      rank: z.string().optional(),
+      rank_level: z.number().optional(),
+      is_active: z.boolean().optional(),
+      taxonomic_status: z.string().optional(),
+      nomenclatural_status: z.string().optional(),
+      authorship: z.string().optional(),
+      canonical_name: z.string().optional(),
+      name_type: z.string().optional(),
+      origin: z.string().optional(),
+      num_descendants: z.number().optional(),
+      iconic_taxon_id: z.number().optional(),
+      complete_species_count: z.number().optional(),
+      atlas_id: z.number().optional(),
+    }).optional(),
     observations_count: z.number().optional(),
-    external_ids: z.record(z.any()).optional(),
+    external_ids: z.object({
+      gbif_id: z.number().optional(),
+      inaturalist_id: z.number().optional(),
+      perenual_id: z.number().optional(),
+      nub_key: z.number().optional(),
+      name_key: z.number().optional(),
+      accepted_key: z.number().optional(),
+      parent_key: z.number().optional(),
+      dataset_key: z.string().optional(),
+      parent_id: z.number().optional(),
+    }).optional(),
+    conservation: z.object({
+      status: z.any().optional(),
+      statuses: z.array(z.any()).optional(),
+    }).optional(),
+    ancestry: z.object({
+      ancestor_ids: z.array(z.number()).optional(),
+      ancestors: z.array(z.any()).optional(),
+      parent: z.any().optional(),
+      children_count: z.number().optional(),
+    }).optional(),
     images: z.array(z.object({
       url: z.string(),
       thumbnail: z.string().optional(),
@@ -58,20 +103,42 @@ Get comprehensive information about a specific plant using an access token from 
 
 ## Data Sources
 The system uses multiple biodiversity databases with graceful degradation:
-- **Local Database**: Cached comprehensive data (fastest)
-- **iNaturalist**: Community photos, observations, taxonomy
-- **GBIF**: Scientific taxonomy, vernacular names
-- **Perenual**: Care guides, characteristics, plant details
+- **GBIF (Primary)**: Scientific taxonomy, vernacular names, synonyms, nomenclatural status
+- **iNaturalist**: Community photos, observations, conservation status, ancestry data
+- **Perenual**: Care guides, plant characteristics, growing information
+- **Local Database**: Cached comprehensive data from all providers
 - **Mock**: Fallback plant database
 
-## Response Data
-Returns complete plant information including:
-- Scientific and common names
-- Taxonomic classification
-- Plant characteristics and care information
-- High-quality images with attribution
-- External database IDs for cross-referencing
-- Wikipedia links when available
+## Comprehensive Response Data
+Returns extensive plant information including:
+
+### **Taxonomic Information**
+- Complete taxonomic hierarchy (kingdom → species)
+- Scientific nomenclature details (authorship, canonical names)
+- Taxonomic and nomenclatural status
+- All vernacular names and synonyms
+
+### **Biological Data**
+- Observation counts and community engagement metrics
+- Conservation status and assessments
+- Ancestry data and phylogenetic relationships
+- External database cross-references (GBIF, iNaturalist, Perenual)
+
+### **Care & Characteristics**
+- Growing requirements (sunlight, watering, care level)
+- Plant characteristics (indoor/outdoor, edible, difficulty)
+- Physical descriptions (mature size, growth cycle)
+- Environmental preferences
+
+### **Rich Media**
+- High-quality images with proper attribution
+- Wikipedia links with contextual information
+- Community photos from iNaturalist observations
+
+### **Provider-Specific Data**
+- **GBIF**: Taxonomic authority, nomenclatural standards
+- **iNaturalist**: Community observations, real-world photos
+- **Perenual**: Practical care information and growing guides
 
 **Note**: Access tokens are temporary and tied to specific search sessions.
     `.trim(),

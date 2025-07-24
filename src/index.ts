@@ -52,15 +52,24 @@ AI-powered plant identification and health assessment API compatible with Plant.
 
 - **Plant Identification**: Upload images to identify plant species using multiple AI providers
 - **Health Assessment**: Analyze plant images for diseases and health issues
-- **Knowledge Base**: Search plant database and get detailed plant information
+- **Knowledge Base**: Comprehensive plant search with multi-provider biodiversity data
 - **API Key Management**: Secure access with API key authentication
 - **Usage Tracking**: Monitor API usage and limits
+
+## Enhanced Knowledge Base
+
+Our plant knowledge base integrates multiple authoritative biodiversity databases:
+
+- **GBIF**: Global Biodiversity Information Facility - comprehensive taxonomic data
+- **iNaturalist**: Community-driven observations with high-quality photos
+- **Perenual**: Plant care guides and growing characteristics
+- **Local Database**: Cached data for fast retrieval
 
 ## Authentication
 
 All endpoints require an \`Api-Key\` header for authentication. Create an API key using the \`/admin/api-keys\` endpoint.
 
-## Supported Providers
+## Plant Identification Providers
 
 - **Mock**: Built-in plant database for testing
 - **PlantNet**: Real plant identification using PlantNet API

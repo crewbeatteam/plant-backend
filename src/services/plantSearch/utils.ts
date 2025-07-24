@@ -39,7 +39,7 @@ export function generateAccessToken(entityId: number, provider: string): string 
   const encoder = new TextEncoder();
   const data = encoder.encode(tokenData);
   const base64 = btoa(String.fromCharCode(...data));
-  return base64.slice(0, 32);
+  return base64; // Don't truncate the token
 }
 
 /**
@@ -48,13 +48,40 @@ export function generateAccessToken(entityId: number, provider: string): string 
 export function parseAccessToken(token: string): { entityId: number; provider: string } | null {
   try {
     const decoded = Buffer.from(token, 'base64').toString();
-    const match = decoded.match(/plant_search_(\d+)_([^_]+)_\d+/);
+    console.log('Decoded token:', decoded);
+    
+    // Try full format first: plant_search_12345_provider_timestamp
+    let match = decoded.match(/plant_search_(\d+)_([^_]+)_\d+/);
     if (match) {
       return {
         entityId: parseInt(match[1]),
         provider: match[2]
       };
     }
+    
+    // Handle truncated tokens (backward compatibility): plant_search_12345_provid
+    match = decoded.match(/plant_search_(\d+)_([^_]+)/);
+    if (match) {
+      // Try to infer provider from partial name
+      const partialProvider = match[2];
+      let fullProvider = partialProvider;
+      
+      // Map partial names to full provider names
+      if (partialProvider.startsWith('inatu')) fullProvider = 'inaturalist';
+      else if (partialProvider.startsWith('gbif')) fullProvider = 'gbif';
+      else if (partialProvider.startsWith('peren')) fullProvider = 'perenual';
+      else if (partialProvider.startsWith('local')) fullProvider = 'local';
+      else if (partialProvider.startsWith('mock')) fullProvider = 'mock';
+      
+      console.log(`Inferred provider '${fullProvider}' from partial '${partialProvider}'`);
+      
+      return {
+        entityId: parseInt(match[1]),
+        provider: fullProvider
+      };
+    }
+    
+    console.warn('Token does not match expected format:', decoded);
   } catch (error) {
     console.warn('Failed to parse access token:', error);
   }
