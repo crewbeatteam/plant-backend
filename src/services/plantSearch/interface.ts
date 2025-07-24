@@ -57,7 +57,11 @@ export interface PlantSearchEntity {
       cycle?: string;
       mature_height?: string;
       mature_width?: string;
+      rank?: string;
+      rank_level?: number;
+      is_active?: boolean;
     };
+    observations_count?: number;
     external_ids?: {
       gbif_id?: number;
       inaturalist_id?: number;
@@ -90,6 +94,7 @@ export interface PlantSearchResult {
 
 export interface PlantSearchProvider {
   search(request: PlantSearchRequest): Promise<PlantSearchResult>;
+  getDetails?(accessToken: string): Promise<PlantSearchEntity | null>;
   getName(): string;
   isAvailable(): Promise<boolean>;
   shouldCache(): boolean;                // Whether results should be stored permanently

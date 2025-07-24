@@ -395,6 +395,37 @@ export class GBIFPlantSearchProvider implements PlantSearchProvider {
   }
   
   /**
+   * Get detailed information about a specific plant entity
+   */
+  async getDetails(accessToken: string): Promise<PlantSearchEntity | null> {
+    const { parseAccessToken } = await import('./utils');
+    const tokenInfo = parseAccessToken(accessToken);
+    
+    if (!tokenInfo || tokenInfo.provider !== 'gbif') {
+      return null;
+    }
+    
+    console.log(`GBIF getting details for entity ID: ${tokenInfo.entityId}`);
+    
+    try {
+      const species = await this.getSpeciesDetails(tokenInfo.entityId.toString());
+      
+      if (!species) {
+        return null;
+      }
+      
+      // Convert to our standard format with full details
+      const entities = await this.convertGBIFToEntities([species], species.scientificName, species.scientificName.toLowerCase());
+      
+      return entities[0] || null;
+      
+    } catch (error) {
+      console.error('GBIF getDetails error:', error);
+      return null;
+    }
+  }
+  
+  /**
    * Get species details by GBIF key
    */
   async getSpeciesDetails(gbifKey: string): Promise<GBIFSpecies | null> {

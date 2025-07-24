@@ -485,6 +485,37 @@ export class iNaturalistPlantSearchProvider implements PlantSearchProvider {
   }
   
   /**
+   * Get detailed information about a specific plant entity
+   */
+  async getDetails(accessToken: string): Promise<PlantSearchEntity | null> {
+    const { parseAccessToken } = await import('./utils');
+    const tokenInfo = parseAccessToken(accessToken);
+    
+    if (!tokenInfo || tokenInfo.provider !== 'inaturalist') {
+      return null;
+    }
+    
+    console.log(`iNaturalist getting details for entity ID: ${tokenInfo.entityId}`);
+    
+    try {
+      const taxon = await this.getTaxonDetails(tokenInfo.entityId.toString());
+      
+      if (!taxon) {
+        return null;
+      }
+      
+      // Convert to our standard format with full details
+      const entities = await this.convertiNaturalistToEntities([taxon], taxon.name, taxon.name.toLowerCase());
+      
+      return entities[0] || null;
+      
+    } catch (error) {
+      console.error('iNaturalist getDetails error:', error);
+      return null;
+    }
+  }
+  
+  /**
    * Get taxon details by iNaturalist ID
    */
   async getTaxonDetails(inaturalistId: string): Promise<iNaturalistTaxon | null> {

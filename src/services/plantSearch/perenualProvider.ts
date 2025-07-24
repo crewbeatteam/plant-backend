@@ -395,6 +395,38 @@ export class PerenualPlantSearchProvider implements PlantSearchProvider {
   }
   
   /**
+   * Get detailed information about a specific plant entity
+   */
+  async getDetails(accessToken: string): Promise<PlantSearchEntity | null> {
+    const { parseAccessToken } = await import('./utils');
+    const tokenInfo = parseAccessToken(accessToken);
+    
+    if (!tokenInfo || tokenInfo.provider !== 'perenual') {
+      return null;
+    }
+    
+    console.log(`Perenual getting details for entity ID: ${tokenInfo.entityId}`);
+    
+    try {
+      const species = await this.getPlantDetails(tokenInfo.entityId.toString());
+      
+      if (!species) {
+        return null;
+      }
+      
+      // Convert to our standard format with full details  
+      const queryName = species.common_name || (Array.isArray(species.scientific_name) ? species.scientific_name[0] : species.scientific_name) || 'Unknown';
+      const entities = this.convertPerenualToEntities([species], queryName, queryName.toLowerCase());
+      
+      return entities[0] || null;
+      
+    } catch (error) {
+      console.error('Perenual getDetails error:', error);
+      return null;
+    }
+  }
+  
+  /**
    * Get detailed plant information by ID (for plant detail endpoint)
    */
   async getPlantDetails(plantId: string): Promise<PerenualSpecies | null> {

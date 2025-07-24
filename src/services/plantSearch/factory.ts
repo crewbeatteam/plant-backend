@@ -1,4 +1,4 @@
-import type { PlantSearchProvider, PlantSearchRequest, PlantSearchResult } from "./interface";
+import type { PlantSearchProvider, PlantSearchRequest, PlantSearchResult, PlantSearchEntity } from "./interface";
 import { LocalPlantSearchProvider } from "./localProvider";
 import { PerenualPlantSearchProvider } from "./perenualProvider";
 import { GBIFPlantSearchProvider } from "./gbifProvider";
@@ -288,6 +288,128 @@ export class PlantSearchFactory {
       valid: errors.length === 0,
       errors
     };
+  }
+  
+  /**
+   * Get plant details by access token with graceful degradation
+   */
+  async getDetails(accessToken: string): Promise<PlantSearchEntity | null> {
+    console.log("=== PLANT DETAILS RETRIEVAL START ===");
+    console.log("Access token:", accessToken);
+    
+    // Parse the access token to get entity info
+    const { parseAccessToken } = await import("./utils");
+    const tokenInfo = parseAccessToken(accessToken);
+    
+    if (!tokenInfo) {
+      console.log("Invalid access token format");
+      return null;
+    }
+    
+    console.log("Token info:", tokenInfo);
+    
+    // First try to get from local database
+    console.log("Trying local provider first...");
+    const localResult = await this.tryProviderDetails(this.localProvider, accessToken);
+    
+    if (localResult) {
+      console.log("Local provider returned detailed results");
+      return localResult;
+    }
+    
+    // If not in local database, try the original provider
+    console.log(`Trying original provider: ${tokenInfo.provider}`);
+    try {
+      const provider = await this.createProvider(tokenInfo.provider as PlantSearchProviderType);
+      
+      if (provider.getDetails) {
+        const result = await this.tryProviderDetails(provider, accessToken);
+        
+        if (result) {
+          console.log(`${tokenInfo.provider} provider returned detailed results`);
+          
+          // Store the detailed result in local database for future access
+          if (provider.shouldCache()) {
+            try {
+              await this.localProvider.storeExternalResults(
+                result.entity_name, 
+                {
+                  entities: [result],
+                  entities_trimmed: false,
+                  limit: 1,
+                  provider: tokenInfo.provider,
+                  cached: false,
+                  search_time_ms: 0,
+                  query_normalized: result.entity_name.toLowerCase(),
+                  total_found: 1
+                }
+              );
+              console.log(`Cached detailed result for ${result.entity_name}`);
+            } catch (error) {
+              console.warn(`Failed to cache detailed result:`, error);
+            }
+          }
+          
+          return result;
+        }
+      } else {
+        console.log(`Provider ${tokenInfo.provider} does not support details retrieval`);
+      }
+    } catch (error) {
+      console.error(`Failed to get details from ${tokenInfo.provider}:`, error);
+    }
+    
+    // If original provider failed, try other providers that support details
+    const fallbackProviders: PlantSearchProviderType[] = ["inaturalist", "gbif", "perenual"];
+    
+    for (const providerType of fallbackProviders) {
+      if (providerType === tokenInfo.provider) continue; // Already tried
+      
+      try {
+        console.log(`Trying fallback provider: ${providerType}`);
+        const provider = await this.createProvider(providerType);
+        
+        if (provider.getDetails) {
+          const result = await this.tryProviderDetails(provider, accessToken);
+          
+          if (result) {
+            console.log(`Fallback provider ${providerType} returned results`);
+            return result;
+          }
+        }
+      } catch (error) {
+        console.error(`Fallback provider ${providerType} failed:`, error);
+      }
+    }
+    
+    console.log("All providers failed to retrieve details");
+    return null;
+  }
+  
+  /**
+   * Try to get details from a specific provider
+   */
+  private async tryProviderDetails(
+    provider: PlantSearchProvider,
+    accessToken: string
+  ): Promise<PlantSearchEntity | null> {
+    try {
+      if (!provider.getDetails) {
+        return null;
+      }
+      
+      console.log(`Getting details from provider: ${provider.getName()}`);
+      const result = await provider.getDetails(accessToken);
+      
+      if (result) {
+        console.log(`Provider ${provider.getName()} returned details for: ${result.entity_name}`);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error(`Provider ${provider.getName()} details failed:`, error);
+      return null;
+    }
   }
   
   /**

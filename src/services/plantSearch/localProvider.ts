@@ -130,6 +130,77 @@ export class LocalPlantSearchProvider implements PlantSearchProvider {
   }
 
   /**
+   * Get detailed information about a specific plant entity
+   */
+  async getDetails(accessToken: string): Promise<PlantSearchEntity | null> {
+    const { parseAccessToken } = await import('./utils');
+    const tokenInfo = parseAccessToken(accessToken);
+    
+    if (!tokenInfo) {
+      return null;
+    }
+    
+    console.log(`Local database getting details for entity ID: ${tokenInfo.entityId}`);
+    
+    try {
+      // Search for the entity in local database by provider_id and provider_source
+      const stmt = this.db["db"].prepare(`
+        SELECT * FROM plant_search_entities 
+        WHERE provider_id = ? AND provider_source = ?
+        LIMIT 1
+      `);
+      
+      const result = await stmt.bind(tokenInfo.entityId.toString(), tokenInfo.provider).first();
+      
+      if (!result) {
+        return null;
+      }
+      
+      // Convert database row to PlantSearchEntity
+      const entity = this.convertDbRowToEntity(result as any);
+      return entity;
+      
+    } catch (error) {
+      console.error('Local database getDetails error:', error);
+      return null;
+    }
+  }
+  
+  /**
+   * Convert database row to PlantSearchEntity format
+   */
+  private convertDbRowToEntity(row: any): PlantSearchEntity {
+    return {
+      matched_in: row.entity_name,
+      matched_in_type: 'entity_name',
+      access_token: row.access_token || '',
+      match_position: 0,
+      match_length: row.entity_name.length,
+      entity_name: row.entity_name,
+      common_names: row.common_names ? JSON.parse(row.common_names) : [],
+      synonyms: row.synonyms ? JSON.parse(row.synonyms) : [],
+      thumbnail: row.thumbnail_url,
+      confidence: 1.0, // Local data is considered fully confident
+      provider_source: row.provider_source,
+      provider_id: row.provider_id,
+      details: {
+        taxonomy: row.taxonomy_data ? JSON.parse(row.taxonomy_data) : undefined,
+        characteristics: row.characteristics_data ? JSON.parse(row.characteristics_data) : undefined,
+        images: row.image_urls ? JSON.parse(row.image_urls).map((url: string) => ({ url })) : undefined,
+        wikipedia: row.wikipedia_url ? {
+          title: row.entity_name,
+          url: row.wikipedia_url
+        } : undefined,
+        external_ids: {
+          gbif_id: row.gbif_id,
+          inaturalist_id: row.inaturalist_id,
+          perenual_id: row.provider_source === 'perenual' ? parseInt(row.provider_id) : undefined
+        }
+      }
+    };
+  }
+
+  /**
    * Apply filters to search results
    */
   private applyFilters(

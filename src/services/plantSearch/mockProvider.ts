@@ -216,6 +216,54 @@ export class MockPlantSearchProvider implements PlantSearchProvider {
   }
   
   /**
+   * Get detailed information about a specific plant entity
+   */
+  async getDetails(accessToken: string): Promise<PlantSearchEntity | null> {
+    const { parseAccessToken } = await import('./utils');
+    const tokenInfo = parseAccessToken(accessToken);
+    
+    if (!tokenInfo || tokenInfo.provider !== 'mock') {
+      return null;
+    }
+    
+    console.log(`Mock provider getting details for entity ID: ${tokenInfo.entityId}`);
+    
+    const plant = this.getPlantDetails(tokenInfo.entityId.toString());
+    
+    if (!plant) {
+      return null;
+    }
+    
+    // Convert to our standard format with full details
+    return {
+      matched_in: plant.name,
+      matched_in_type: 'entity_name',
+      access_token: generateAccessToken(plant.id, 'mock'),
+      match_position: 0,
+      match_length: plant.name.length,
+      entity_name: plant.name,
+      common_names: plant.common_names,
+      synonyms: [], // Mock data doesn't have synonyms
+      thumbnail: plant.wikipedia?.image,
+      confidence: 1.0,
+      provider_source: 'mock',
+      provider_id: plant.id.toString(),
+      details: {
+        taxonomy: plant.taxonomy,
+        external_ids: {
+          gbif_id: plant.gbif_id,
+          inaturalist_id: plant.inaturalist_id
+        },
+        images: plant.wikipedia?.image ? [{
+          url: plant.wikipedia.image,
+          thumbnail: plant.wikipedia.image
+        }] : undefined,
+        wikipedia: plant.wikipedia
+      }
+    };
+  }
+
+  /**
    * Get plant details by ID (for compatibility with other providers)
    */
   getPlantDetails(plantId: string): typeof MOCK_PLANT_SPECIES[0] | null {
