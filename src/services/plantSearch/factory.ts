@@ -3,9 +3,10 @@ import { LocalPlantSearchProvider } from "./localProvider";
 import { PerenualPlantSearchProvider } from "./perenualProvider";
 import { GBIFPlantSearchProvider } from "./gbifProvider";
 import { iNaturalistPlantSearchProvider } from "./inaturalistProvider";
+import { POWOPlantSearchProvider } from "./powoProvider";
 import { PlantSearchDatabase } from "./utils";
 
-export type PlantSearchProviderType = "local" | "perenual" | "gbif" | "inaturalist" | "openai" | "mock";
+export type PlantSearchProviderType = "local" | "perenual" | "gbif" | "inaturalist" | "powo" | "openai" | "mock";
 
 export interface PlantSearchConfig {
   perenual?: {
@@ -48,6 +49,9 @@ export class PlantSearchFactory {
         
       case "inaturalist":
         return new iNaturalistPlantSearchProvider();
+        
+      case "powo":
+        return new POWOPlantSearchProvider();
         
       case "openai":
         if (!this.config.openai?.apiKey) {

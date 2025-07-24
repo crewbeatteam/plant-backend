@@ -70,18 +70,54 @@ export interface PlantSearchEntity {
       iconic_taxon_id?: number;
       complete_species_count?: number;
       atlas_id?: number;
+      // Perenual-specific characteristics
+      plant_type?: string;
+      growth_rate?: string;
+      hardiness_min?: string;
+      hardiness_max?: string;
+      flowers?: boolean;
+      flowering_season?: string;
+      flower_color?: string;
+      fruit_color?: string;
+      leaf_color?: string;
+      harvest_season?: string;
+      fruiting_season?: string;
+      attracts?: string;
+      propagation?: string;
+      soil_requirements?: string;
+      growth_habit?: string;
+      natural_habitat?: string;
+      pest_susceptibility?: string;
+      // POWO-specific characteristics
+      basionym?: string;
+      distribution_native?: string;
+      distribution_introduced?: string;
+      distribution_extinct?: string;
+      distribution_doubtful?: string;
     };
     observations_count?: number;
     external_ids?: {
       gbif_id?: number;
       inaturalist_id?: number;
       perenual_id?: number;
+      powo_id?: number;
       nub_key?: number;
       name_key?: number;
       accepted_key?: number;
       parent_key?: number;
       dataset_key?: string;
       parent_id?: number;
+    };
+    care_guides?: {
+      description?: string;
+      care_guides_url?: string;
+      edible_fruit_info?: {
+        taste_profile?: string;
+        nutritional_value?: string;
+      };
+      medicinal?: boolean;
+      cuisine?: boolean;
+      problems?: string;
     };
     images?: Array<{
       url: string;

@@ -61,6 +61,7 @@ AI-powered plant identification and health assessment API compatible with Plant.
 Our plant knowledge base integrates multiple authoritative biodiversity databases:
 
 - **GBIF**: Global Biodiversity Information Facility - comprehensive taxonomic data
+- **POWO**: Plants of the World Online from Royal Botanic Gardens Kew - authoritative nomenclature
 - **iNaturalist**: Community-driven observations with high-quality photos
 - **Perenual**: Plant care guides and growing characteristics
 - **Local Database**: Cached data for fast retrieval

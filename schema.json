@@ -3,7 +3,7 @@
   "info": {
     "title": "Plant.ID v3 API",
     "version": "3.0.0",
-    "description": "# Plant.ID v3 API\n\nAI-powered plant identification and health assessment API compatible with Plant.ID v3.\n\n## Features\n\n- **Plant Identification**: Upload images to identify plant species using multiple AI providers\n- **Health Assessment**: Analyze plant images for diseases and health issues\n- **Knowledge Base**: Comprehensive plant search with multi-provider biodiversity data\n- **API Key Management**: Secure access with API key authentication\n- **Usage Tracking**: Monitor API usage and limits\n\n## Enhanced Knowledge Base\n\nOur plant knowledge base integrates multiple authoritative biodiversity databases:\n\n- **GBIF**: Global Biodiversity Information Facility - comprehensive taxonomic data\n- **iNaturalist**: Community-driven observations with high-quality photos\n- **Perenual**: Plant care guides and growing characteristics\n- **Local Database**: Cached data for fast retrieval\n\n## Authentication\n\nAll endpoints require an `Api-Key` header for authentication. Create an API key using the `/admin/api-keys` endpoint.\n\n## Plant Identification Providers\n\n- **Mock**: Built-in plant database for testing\n- **PlantNet**: Real plant identification using PlantNet API\n- **OpenAI**: AI-powered identification using GPT-4 Vision\n\n## Rate Limits\n\nAPI usage is tracked and limited based on your subscription plan. Check your usage with the `/v3/usage_info` endpoint.",
+    "description": "# Plant.ID v3 API\n\nAI-powered plant identification and health assessment API compatible with Plant.ID v3.\n\n## Features\n\n- **Plant Identification**: Upload images to identify plant species using multiple AI providers\n- **Health Assessment**: Analyze plant images for diseases and health issues\n- **Knowledge Base**: Comprehensive plant search with multi-provider biodiversity data\n- **API Key Management**: Secure access with API key authentication\n- **Usage Tracking**: Monitor API usage and limits\n\n## Enhanced Knowledge Base\n\nOur plant knowledge base integrates multiple authoritative biodiversity databases:\n\n- **GBIF**: Global Biodiversity Information Facility - comprehensive taxonomic data\n- **POWO**: Plants of the World Online from Royal Botanic Gardens Kew - authoritative nomenclature\n- **iNaturalist**: Community-driven observations with high-quality photos\n- **Perenual**: Plant care guides and growing characteristics\n- **Local Database**: Cached data for fast retrieval\n\n## Authentication\n\nAll endpoints require an `Api-Key` header for authentication. Create an API key using the `/admin/api-keys` endpoint.\n\n## Plant Identification Providers\n\n- **Mock**: Built-in plant database for testing\n- **PlantNet**: Real plant identification using PlantNet API\n- **OpenAI**: AI-powered identification using GPT-4 Vision\n\n## Rate Limits\n\nAPI usage is tracked and limited based on your subscription plan. Check your usage with the `/v3/usage_info` endpoint.",
     "contact": {
       "name": "Plant.ID API Support",
       "url": "https://github.com/your-repo/plant-id",
@@ -1779,7 +1779,7 @@
           "Plant Knowledge Base"
         ],
         "summary": "Get plant details",
-        "description": "Get comprehensive information about a specific plant using an access token from plant search results.\n\n## How it works\n1. First search for plants using `/v3/kb/plants/name_search`\n2. Get the `access_token` from search results\n3. Use this endpoint to retrieve detailed information\n\n## Data Sources\nThe system uses multiple biodiversity databases with graceful degradation:\n- **GBIF (Primary)**: Scientific taxonomy, vernacular names, synonyms, nomenclatural status\n- **iNaturalist**: Community photos, observations, conservation status, ancestry data\n- **Perenual**: Care guides, plant characteristics, growing information\n- **Local Database**: Cached comprehensive data from all providers\n- **Mock**: Fallback plant database\n\n## Comprehensive Response Data\nReturns extensive plant information including:\n\n### **Taxonomic Information**\n- Complete taxonomic hierarchy (kingdom → species)\n- Scientific nomenclature details (authorship, canonical names)\n- Taxonomic and nomenclatural status\n- All vernacular names and synonyms\n\n### **Biological Data**\n- Observation counts and community engagement metrics\n- Conservation status and assessments\n- Ancestry data and phylogenetic relationships\n- External database cross-references (GBIF, iNaturalist, Perenual)\n\n### **Care & Characteristics**\n- Growing requirements (sunlight, watering, care level)\n- Plant characteristics (indoor/outdoor, edible, difficulty)\n- Physical descriptions (mature size, growth cycle)\n- Environmental preferences\n\n### **Rich Media**\n- High-quality images with proper attribution\n- Wikipedia links with contextual information\n- Community photos from iNaturalist observations\n\n### **Provider-Specific Data**\n- **GBIF**: Taxonomic authority, nomenclatural standards\n- **iNaturalist**: Community observations, real-world photos\n- **Perenual**: Practical care information and growing guides\n\n**Note**: Access tokens are temporary and tied to specific search sessions.",
+        "description": "Get comprehensive information about a specific plant using an access token from plant search results.\n\n## How it works\n1. First search for plants using `/v3/kb/plants/name_search`\n2. Get the `access_token` from search results\n3. Use this endpoint to retrieve detailed information\n\n## Data Sources\nThe system uses multiple biodiversity databases with graceful degradation:\n- **GBIF (Primary)**: Scientific taxonomy, vernacular names, synonyms, nomenclatural status\n- **POWO**: Authoritative taxonomic data from Royal Botanic Gardens Kew, distribution information\n- **iNaturalist**: Community photos, observations, conservation status, ancestry data  \n- **Perenual**: Care guides, plant characteristics, growing information\n- **Local Database**: Cached comprehensive data from all providers\n- **Mock**: Fallback plant database\n\n## Comprehensive Response Data\nReturns extensive plant information including:\n\n### **Taxonomic Information**\n- Complete taxonomic hierarchy (kingdom → species)\n- Scientific nomenclature details (authorship, canonical names)\n- Taxonomic and nomenclatural status\n- All vernacular names and synonyms\n\n### **Biological Data**\n- Observation counts and community engagement metrics\n- Conservation status and assessments\n- Ancestry data and phylogenetic relationships\n- External database cross-references (GBIF, iNaturalist, Perenual)\n\n### **Care & Characteristics**\n- Growing requirements (sunlight, watering, care level)\n- Plant characteristics (indoor/outdoor, edible, difficulty)\n- Physical descriptions (mature size, growth cycle)\n- Environmental preferences\n\n### **Rich Media**\n- High-quality images with proper attribution\n- Wikipedia links with contextual information\n- Community photos from iNaturalist observations\n\n### **Provider-Specific Data**\n- **GBIF**: Taxonomic authority, nomenclatural standards\n- **POWO**: Authoritative botanical data from Kew Gardens, global distribution\n- **iNaturalist**: Community observations, real-world photos\n- **Perenual**: Practical care information and growing guides\n\n**Note**: Access tokens are temporary and tied to specific search sessions.",
         "operationId": "get_PlantDetail",
         "parameters": [
           {
@@ -1970,6 +1970,72 @@
                             },
                             "atlas_id": {
                               "type": "number"
+                            },
+                            "plant_type": {
+                              "type": "string"
+                            },
+                            "growth_rate": {
+                              "type": "string"
+                            },
+                            "hardiness_min": {
+                              "type": "string"
+                            },
+                            "hardiness_max": {
+                              "type": "string"
+                            },
+                            "flowers": {
+                              "type": "boolean"
+                            },
+                            "flowering_season": {
+                              "type": "string"
+                            },
+                            "flower_color": {
+                              "type": "string"
+                            },
+                            "fruit_color": {
+                              "type": "string"
+                            },
+                            "leaf_color": {
+                              "type": "string"
+                            },
+                            "harvest_season": {
+                              "type": "string"
+                            },
+                            "fruiting_season": {
+                              "type": "string"
+                            },
+                            "attracts": {
+                              "type": "string"
+                            },
+                            "propagation": {
+                              "type": "string"
+                            },
+                            "soil_requirements": {
+                              "type": "string"
+                            },
+                            "growth_habit": {
+                              "type": "string"
+                            },
+                            "natural_habitat": {
+                              "type": "string"
+                            },
+                            "pest_susceptibility": {
+                              "type": "string"
+                            },
+                            "basionym": {
+                              "type": "string"
+                            },
+                            "distribution_native": {
+                              "type": "string"
+                            },
+                            "distribution_introduced": {
+                              "type": "string"
+                            },
+                            "distribution_extinct": {
+                              "type": "string"
+                            },
+                            "distribution_doubtful": {
+                              "type": "string"
                             }
                           }
                         },
@@ -1986,6 +2052,9 @@
                               "type": "number"
                             },
                             "perenual_id": {
+                              "type": "number"
+                            },
+                            "powo_id": {
                               "type": "number"
                             },
                             "nub_key": {
@@ -2077,6 +2146,37 @@
                             "title",
                             "url"
                           ]
+                        },
+                        "care_guides": {
+                          "type": "object",
+                          "properties": {
+                            "description": {
+                              "type": "string"
+                            },
+                            "care_guides_url": {
+                              "type": "string"
+                            },
+                            "edible_fruit_info": {
+                              "type": "object",
+                              "properties": {
+                                "taste_profile": {
+                                  "type": "string"
+                                },
+                                "nutritional_value": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "medicinal": {
+                              "type": "boolean"
+                            },
+                            "cuisine": {
+                              "type": "boolean"
+                            },
+                            "problems": {
+                              "type": "string"
+                            }
+                          }
                         }
                       }
                     }

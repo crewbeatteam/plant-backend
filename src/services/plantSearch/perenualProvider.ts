@@ -414,11 +414,90 @@ export class PerenualPlantSearchProvider implements PlantSearchProvider {
         return null;
       }
       
-      // Convert to our standard format with full details  
-      const queryName = species.common_name || (Array.isArray(species.scientific_name) ? species.scientific_name[0] : species.scientific_name) || 'Unknown';
-      const entities = this.convertPerenualToEntities([species], queryName, queryName.toLowerCase());
+      console.log(`Perenual species details retrieved:`, {
+        common_name: species.common_name,
+        scientific_name: species.scientific_name,
+        cycle: species.cycle,
+        watering: species.watering,
+        has_image: !!species.default_image
+      });
       
-      return entities[0] || null;
+      // Get primary scientific name
+      const scientificName = Array.isArray(species.scientific_name) && species.scientific_name.length > 0 
+        ? species.scientific_name[0] 
+        : (typeof species.scientific_name === 'string' ? species.scientific_name : species.common_name);
+      
+      // Prepare common names (include the main common_name and other_name array)
+      const commonNames = [species.common_name, ...(species.other_name || [])].filter(Boolean);
+      
+      // Build comprehensive entity with all Perenual-specific data
+      const entity: PlantSearchEntity = {
+        matched_in: scientificName,
+        matched_in_type: 'entity_name',
+        access_token: accessToken,
+        match_position: 0,
+        match_length: scientificName.length,
+        entity_name: scientificName,
+        common_names: [...new Set(commonNames)].filter(Boolean),
+        synonyms: species.other_name || [],
+        thumbnail: species.default_image?.thumbnail,
+        confidence: 1.0,
+        provider_source: 'perenual',
+        provider_id: species.id.toString(),
+        details: {
+          characteristics: {
+            indoor: species.indoor,
+            cycle: species.cycle,
+            care_level: species.care_level,
+            watering: species.watering,
+            sunlight: Array.isArray(species.sunlight) ? species.sunlight[0] : species.sunlight,
+            edible: species.edible_fruit || species.edible_leaf || false,
+            poisonous: species.poisonous_to_humans === 1 || species.poisonous_to_pets === 1,
+            difficulty: species.maintenance,
+            mature_height: species.dimension,
+            // Additional Perenual-specific characteristics
+            plant_type: species.type,
+            growth_rate: species.growth_rate,
+            hardiness_min: species.hardiness?.min,
+            hardiness_max: species.hardiness?.max,
+            flowers: species.flowers,
+            flowering_season: species.flowering_season,
+            flower_color: Array.isArray(species.flowers_color) ? species.flowers_color.join(', ') : species.flowers_color,
+            fruit_color: Array.isArray(species.fruit_color) ? species.fruit_color.join(', ') : undefined,
+            leaf_color: Array.isArray(species.leaf_color) ? species.leaf_color.join(', ') : undefined,
+            harvest_season: species.harvest_season,
+            fruiting_season: species.fruiting_season,
+            attracts: Array.isArray(species.attracts) ? species.attracts.join(', ') : undefined,
+            propagation: Array.isArray(species.propagation) ? species.propagation.join(', ') : undefined,
+            soil_requirements: Array.isArray(species.soil) ? species.soil.join(', ') : undefined,
+            growth_habit: species.growth_habit,
+            natural_habitat: Array.isArray(species.natural_habitat) ? species.natural_habitat.join(', ') : undefined,
+            pest_susceptibility: Array.isArray(species.pest_susceptibility) ? species.pest_susceptibility.join(', ') : undefined
+          },
+          images: species.default_image ? [{
+            url: species.default_image.regular_url,
+            thumbnail: species.default_image.thumbnail,
+            license: species.default_image.license_name,
+            attribution: species.default_image.license_url
+          }] : undefined,
+          external_ids: {
+            perenual_id: species.id
+          },
+          care_guides: {
+            description: species.description,
+            care_guides_url: species.care_guides,
+            edible_fruit_info: species.edible_fruit ? {
+              taste_profile: species.edible_fruit_taste_profile,
+              nutritional_value: species.fruit_nutritional_value
+            } : undefined,
+            medicinal: species.medicinal,
+            cuisine: species.cuisine,
+            problems: species.problem
+          }
+        }
+      };
+      
+      return entity;
       
     } catch (error) {
       console.error('Perenual getDetails error:', error);

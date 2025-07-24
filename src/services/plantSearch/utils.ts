@@ -70,6 +70,7 @@ export function parseAccessToken(token: string): { entityId: number; provider: s
       if (partialProvider.startsWith('inatu')) fullProvider = 'inaturalist';
       else if (partialProvider.startsWith('gbif')) fullProvider = 'gbif';
       else if (partialProvider.startsWith('peren')) fullProvider = 'perenual';
+      else if (partialProvider.startsWith('powo')) fullProvider = 'powo';
       else if (partialProvider.startsWith('local')) fullProvider = 'local';
       else if (partialProvider.startsWith('mock')) fullProvider = 'mock';
       

@@ -52,12 +52,37 @@ const PlantDetailResponseSchema = z.object({
       iconic_taxon_id: z.number().optional(),
       complete_species_count: z.number().optional(),
       atlas_id: z.number().optional(),
+      // Perenual-specific characteristics
+      plant_type: z.string().optional(),
+      growth_rate: z.string().optional(),
+      hardiness_min: z.string().optional(),
+      hardiness_max: z.string().optional(),
+      flowers: z.boolean().optional(),
+      flowering_season: z.string().optional(),
+      flower_color: z.string().optional(),
+      fruit_color: z.string().optional(),
+      leaf_color: z.string().optional(),
+      harvest_season: z.string().optional(),
+      fruiting_season: z.string().optional(),
+      attracts: z.string().optional(),
+      propagation: z.string().optional(),
+      soil_requirements: z.string().optional(),
+      growth_habit: z.string().optional(),
+      natural_habitat: z.string().optional(),
+      pest_susceptibility: z.string().optional(),
+      // POWO-specific characteristics
+      basionym: z.string().optional(),
+      distribution_native: z.string().optional(),
+      distribution_introduced: z.string().optional(),
+      distribution_extinct: z.string().optional(),
+      distribution_doubtful: z.string().optional(),
     }).optional(),
     observations_count: z.number().optional(),
     external_ids: z.object({
       gbif_id: z.number().optional(),
       inaturalist_id: z.number().optional(),
       perenual_id: z.number().optional(),
+      powo_id: z.number().optional(),
       nub_key: z.number().optional(),
       name_key: z.number().optional(),
       accepted_key: z.number().optional(),
@@ -86,6 +111,17 @@ const PlantDetailResponseSchema = z.object({
       url: z.string(),
       extract: z.string().optional(),
     }).optional(),
+    care_guides: z.object({
+      description: z.string().optional(),
+      care_guides_url: z.string().optional(),
+      edible_fruit_info: z.object({
+        taste_profile: z.string().optional(),
+        nutritional_value: z.string().optional(),
+      }).optional(),
+      medicinal: z.boolean().optional(),
+      cuisine: z.boolean().optional(),
+      problems: z.string().optional(),
+    }).optional(),
   }).optional(),
 });
 
@@ -104,7 +140,8 @@ Get comprehensive information about a specific plant using an access token from 
 ## Data Sources
 The system uses multiple biodiversity databases with graceful degradation:
 - **GBIF (Primary)**: Scientific taxonomy, vernacular names, synonyms, nomenclatural status
-- **iNaturalist**: Community photos, observations, conservation status, ancestry data
+- **POWO**: Authoritative taxonomic data from Royal Botanic Gardens Kew, distribution information
+- **iNaturalist**: Community photos, observations, conservation status, ancestry data  
 - **Perenual**: Care guides, plant characteristics, growing information
 - **Local Database**: Cached comprehensive data from all providers
 - **Mock**: Fallback plant database
@@ -137,6 +174,7 @@ Returns extensive plant information including:
 
 ### **Provider-Specific Data**
 - **GBIF**: Taxonomic authority, nomenclatural standards
+- **POWO**: Authoritative botanical data from Kew Gardens, global distribution
 - **iNaturalist**: Community observations, real-world photos
 - **Perenual**: Practical care information and growing guides
 

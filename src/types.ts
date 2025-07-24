@@ -6,11 +6,11 @@ export interface Env {
   IMAGES: R2Bucket;
   PLANTNET_API_KEY: string;
   OPENAI_API_KEY: string;
-  PERENUAL_API_KEY?: string;
+  PERENUAL_API_KEY: string;
   DEFAULT_IDENTIFIER: string;
   FALLBACK_IDENTIFIERS: string;
-  DEFAULT_PLANT_SEARCH_PROVIDER: "perenual";
-  PLANT_SEARCH_DEGRADATION_PROVIDERS: "gbif,inaturalist,openai,mock";
+  DEFAULT_PLANT_SEARCH_PROVIDER: string;
+  PLANT_SEARCH_DEGRADATION_PROVIDERS: string;
 }
 
 export type AppContext = Context<{ 
